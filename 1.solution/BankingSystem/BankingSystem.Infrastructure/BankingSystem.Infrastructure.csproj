@@ -8,11 +8,9 @@
 
   <ItemGroup>
     <Folder Include="DBCONTEXT\" />
-    <Folder Include="Reposiotry\" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\BankingSystem.Application\BankingSystem.Application.csproj" />
     <ProjectReference Include="..\BankingSystem.Domain\BankingSystem.Domain.csproj" />
   </ItemGroup>
 
