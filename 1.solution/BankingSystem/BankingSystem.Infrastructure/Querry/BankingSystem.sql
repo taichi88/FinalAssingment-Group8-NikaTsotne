@@ -1,0 +1,44 @@
+GO
+USE BankingSystem;
+
+CREATE TABLE Accounts(
+	Id INT PRIMARY KEY IDENTITY(1,1) NOT NULL,
+	IBAN NVARCHAR(MAX) NOT NULL,
+	Balance decimal(18,2) NOT NULL,
+	Currency NVARCHAR(MAX) NOT NULL,
+	PersonId NVARCHAR(450) NOT NULL,
+
+	FOREIGN KEY (PersonId)
+	REFERENCES AspNetUsers(Id)
+)
+
+
+CREATE TABLE Cards(
+	Id INT PRIMARY KEY IDENTITY(1,1) NOT NULL,
+	Firstname NVARCHAR(MAX) NOT NULL,
+	Lastname NVARCHAR(MAX) NOT NULL,
+	CardNumber NVARCHAR(MAX) NOT NULL,
+	ExpirationDate DATE NOT NULL,
+	CVV NVARCHAR(MAX) NOT NULL,
+	PinCode NVARCHAR(MAX) NOT NULL,
+	AccountId INT NOT NULL,
+
+	FOREIGN KEY (AccountId)
+	REFERENCES Accounts(Id)
+)
+
+
+CREATE TABLE Transactions(
+	Id INT PRIMARY KEY IDENTITY(1,1) NOT NULL,
+	Amount decimal(18,2) NOT NULL,
+	Currency NVARCHAR(3) NOT NULL,
+	TransactionType NVARCHAR(50) NOT NULL,
+	TransactionDate DATE NOT NULL,
+	FromAccountId INT NOT NULL,
+	ToAccountId INT NOT NULL,
+	FOREIGN KEY (FromAccountId)
+	REFERENCES Accounts(Id),
+
+	FOREIGN KEY (ToAccountId)
+	REFERENCES Accounts(Id)
+)
