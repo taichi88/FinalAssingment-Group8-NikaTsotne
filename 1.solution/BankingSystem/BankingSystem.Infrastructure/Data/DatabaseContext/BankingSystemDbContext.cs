@@ -1,12 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using BankingSystem.Application.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
-namespace BankingSystem.Infrastructure.Data.DatabaseContext
+namespace BankingSystem.Infrastructure.Data.DatabaseContext;
+
+public class BankingSystemDbContext : IdentityDbContext<IdentityPerson>
 {
-    internal class BankingSystemDbContext
-    {
-    }
+    public BankingSystemDbContext(DbContextOptions<BankingSystemDbContext> options) : base(options) { }
+    public DbSet<IdentityPerson> IdentityPersons { get; set; }
 }
