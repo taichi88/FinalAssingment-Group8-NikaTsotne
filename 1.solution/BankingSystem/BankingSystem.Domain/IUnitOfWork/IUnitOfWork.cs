@@ -1,6 +1,6 @@
-﻿using BankingSystem.Domain.RepositoryContracts;
+﻿using BankingSystem.Domain.IRepository;
 
-namespace BankingSystem.Domain.UnitOfWorkContracts;
+namespace BankingSystem.Domain.IUnitOfWork;
 public interface IUnitOfWork : IAsyncDisposable
 {
     public IPersonRepository PersonRepository { get; }

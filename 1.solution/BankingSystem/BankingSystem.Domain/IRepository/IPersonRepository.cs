@@ -1,6 +1,6 @@
 ﻿using BankingSystem.Domain.Entities;
 
-namespace BankingSystem.Domain.RepositoryContracts;
+namespace BankingSystem.Domain.IRepository;
 
 public interface IPersonRepository : ITransaction
 {

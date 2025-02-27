@@ -1,6 +1,6 @@
 using System.Data;
 
-namespace BankingSystem.Domain.RepositoryContracts;
+namespace BankingSystem.Domain.IRepository;
 
 public interface ITransaction
 {
