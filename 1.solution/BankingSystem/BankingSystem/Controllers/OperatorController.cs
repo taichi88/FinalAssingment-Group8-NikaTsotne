@@ -33,7 +33,7 @@ public class OperatorController : ControllerBase
 
 
     [HttpPost("login")]
-    public async Task<IActionResult> Login([FromBody] PersonLoginDto loginModel)
+    public async Task<IActionResult> Login([FromForm] PersonLoginDto loginModel)
     {
         var result = await _authService.AuthenticationPersonAsync(loginModel);
 
@@ -43,11 +43,15 @@ public class OperatorController : ControllerBase
         return Ok(result);
     }
 
-    [Authorize(Roles = "Operator")]
+    //[Authorize(Roles = "Operator")]
     [HttpPost("create-bank-account")]
     public async Task<IActionResult> CreateAccount(AccountRegisterDto AccountRegisterDto)
     {
-        await _accountService.CreateAccountAsync(AccountRegisterDto);
+        var result = await _accountService.CreateAccountAsync(AccountRegisterDto);
+        if (result == false)
+        {
+            return BadRequest();
+        }
 
         return Ok(new { message = "Account created successfully" });
     }

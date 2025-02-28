@@ -23,7 +23,7 @@ public class AccountRepository : IAccountRepository
     {
         const string query = "INSERT INTO Accounts(IBAN, Balance, Currency, PersonId) VALUES (@IBAN, @Balance, @Currency, @PersonId)";
 
-        await _connection.ExecuteAsync(query, account, _transaction);
+        await _connection.ExecuteAsync(query, new{account.IBAN, account.Balance, account.Currency, account.PersonId }, _transaction);
     }
 
     public async Task UpdateAccountAsync(Account account)

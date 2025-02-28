@@ -5,8 +5,9 @@ namespace BankingSystem.Application.DTO;
 
 public class AccountRegisterDto
 {
-    [Required(ErrorMessage = "Username is required.")]
-    public string Username { get; set; }
+    [Required(ErrorMessage = "ID number is required.")]
+    [StringLength(11, MinimumLength = 11, ErrorMessage = "ID number must be exactly 11 characters.")]
+    public required string IdNumber { get; set; }
 
     [Required(ErrorMessage = "IBAN is required.")]
     [IbanValidation(ErrorMessage = "Invalid IBAN format.")]

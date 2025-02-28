@@ -13,13 +13,13 @@ public class AccountService(IUnitOfWork unitOfWork) : IAccountService
         {
             await unitOfWork.BeginTransactionAsync();
 
-            var person = await unitOfWork.PersonRepository.GetUserByUsernameAsync(AccountRegisterDto.Username);
+            var person = await unitOfWork.PersonRepository.GetUserByIdNumberAsync(AccountRegisterDto.IdNumber);
 
             var Account = new Account
             {
                 IBAN = AccountRegisterDto.Iban,
                 Balance = AccountRegisterDto.Balance,
-                PersonId = person!.PersonId,
+                PersonId = person,
                 Currency = AccountRegisterDto.Currency
             };
 
