@@ -13,12 +13,22 @@ using Microsoft.AspNetCore.Identity;
 
 namespace BankingSystem.Application.Services;
 
-public class PersonAuthService(IConfiguration configuration, UserManager<IdentityPerson> userManager, RoleManager<IdentityRole> roleManager) : IPersonAuthService
+public class PersonAuthService : IPersonAuthService
 {
+    private readonly IConfiguration _configuration;
+    private readonly UserManager<IdentityPerson> _userManager;
+    private readonly RoleManager<IdentityRole> _roleManager;
+
+    public PersonAuthService(IConfiguration configuration, UserManager<IdentityPerson> userManager, RoleManager<IdentityRole> roleManager)
+    {
+        _configuration = configuration;
+        _userManager = userManager;
+        _roleManager = roleManager;
+    }
     public async Task<AuthenticationResponse> AuthenticationPersonAsync(PersonLoginDto loginDto)
     {
-        var user = await userManager.FindByEmailAsync(loginDto.Email);
-        if (user == null || !await userManager.CheckPasswordAsync(user, loginDto.Password))
+        var user = await _userManager.FindByEmailAsync(loginDto.Email);
+        if (user == null || !await _userManager.CheckPasswordAsync(user, loginDto.Password))
         {
             return new AuthenticationResponse
             {
@@ -33,7 +43,9 @@ public class PersonAuthService(IConfiguration configuration, UserManager<Identit
         return tokenResponse;
     }
 
-
+    //აქ ხდება ჩიერ სვაგერში შეყვანილი ინფორმაციის (დტო-ში) დაკავშრება და დაესაინება IdentityPerson -ის მოდელისთვის, რომლის ინიციალიზაციაც ხდება 
+    //var user -ში. ამასთან IdentityPerson არის მოდელი რომელიც ინჰერიტანსით იღებს მეთდებს IdentityUser კლასისგან.
+    //შესაბამისად ეს მონაცემები გადაეცემა IdentityPerson და IdentityUsers-ს მიაქვს.
     public async Task<bool> RegisterPersonAsync(PersonRegisterDto registerDto)
     {
         var user = new IdentityPerson
@@ -45,8 +57,8 @@ public class PersonAuthService(IConfiguration configuration, UserManager<Identit
             BirthDate = registerDto.BirthDate,
             IdNumber = registerDto.IdNumber
         };
-
-        var result = await userManager.CreateAsync(user, registerDto.Password);
+        //ეს არის უზერმენეჯერის მიერ გამოსაყენებელი მეთოდი, და ამ მეთოდი მიდის ეს ინფორმაციები უზერ მენეჯერში და ინახება.
+        var result = await _userManager.CreateAsync(user, registerDto.Password);
 
         if (!result.Succeeded)
             return false;
@@ -54,20 +66,20 @@ public class PersonAuthService(IConfiguration configuration, UserManager<Identit
         if (string.IsNullOrEmpty(registerDto.Role))
             registerDto.Role = "User";
 
-        if (!await roleManager.RoleExistsAsync(registerDto.Role))
+        if (!await _roleManager.RoleExistsAsync(registerDto.Role))
             return false;
 
-        await userManager.AddToRoleAsync(user, registerDto.Role);
+        await _userManager.AddToRoleAsync(user, registerDto.Role);
 
         return true;
     }
 
     public async Task<AuthenticationResponse> GenerateJwtToken(IdentityPerson user)
     {
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Key"]!));
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-        var roles = await userManager.GetRolesAsync(user);
+        var roles = await _userManager.GetRolesAsync(user);
         var roleClaims = roles.Select(role => new Claim(ClaimTypes.Role, role)).ToList();
 
         var claims = new List<Claim>
@@ -81,8 +93,8 @@ public class PersonAuthService(IConfiguration configuration, UserManager<Identit
         var expiration = DateTime.UtcNow.AddHours(1);
         
         var tokenGenerator = new JwtSecurityToken(
-            configuration["Jwt:Issuer"],
-            configuration["Jwt:Audience"],
+            _configuration["Jwt:Issuer"],
+            _configuration["Jwt:Audience"],
             claims,
             expires: expiration,
             signingCredentials: credentials

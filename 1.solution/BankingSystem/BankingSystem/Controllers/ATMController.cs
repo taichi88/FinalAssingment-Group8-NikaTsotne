@@ -17,7 +17,7 @@ public class AtmController : ControllerBase
     
     [HttpPost("authorize-card")]
     public async Task<ActionResult<ApiResponse>> Authorize(CardAuthorizationDto cardAuthorizationDto)
-    {
+    {       
         var response = await _atmService.AuthorizeCardAsync(cardAuthorizationDto);
         if (response.IsSuccess)
         {

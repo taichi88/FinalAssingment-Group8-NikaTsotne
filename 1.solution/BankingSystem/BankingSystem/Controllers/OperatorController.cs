@@ -21,6 +21,10 @@ public class OperatorController : ControllerBase
 
     [Authorize(Roles = "Operator")]
     [HttpPost("register-user")]
+
+    //From Body აქ საჭირო არ არის, ვინაიდან ის მხოლოდ მაშინ გამოიყენება როდესაც ხდება ორი კომპლექსური პარამეტრის გადაცემა.
+    //მაგალთად ROute, Query, ვინაიდან ასპ.ნეტ ქორი ვერ ხვდება საიდან უნდა წამოიღოს ეს მონაცემი. ამ დროს ვუთითებთ. 
+    //ეხლა ვერ მოვხსნი არ მინდა რამე ავრიო...
     public async Task<IActionResult> RegisterUser([FromBody] PersonRegisterDto registerModel)
     {
         if (!await _authService.RegisterPersonAsync(registerModel))
