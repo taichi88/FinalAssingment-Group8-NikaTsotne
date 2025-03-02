@@ -5,5 +5,5 @@ namespace BankingSystem.Domain.IRepository;
 
 public interface IAccountTransactionRepository : ITransaction
 {
-    Task AddAccountTransactionAsync(AccountTransaction accountTransaction);
+    Task AddAccountTransactionAsync(Transaction accountTransaction);
 }

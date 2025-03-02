@@ -18,7 +18,7 @@ public class AccountTransactionService(IUnitOfWork unitOfWork, IExchangeRateApi 
 
             if (fromAccount.PersonId == userId)
             {
-                var transaction = new AccountTransaction
+                var transaction = new Transaction
                 {
                     FromAccountId = transactionDto.FromAccountId,
                     ToAccountId = transactionDto.ToAccountId,

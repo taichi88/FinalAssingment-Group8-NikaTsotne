@@ -1,6 +1,6 @@
 ﻿namespace BankingSystem.Domain.Entities;
 
-public class AccountTransaction
+public class Transaction
 {
     public int Id { get; set; }
     public decimal Amount { get; set; }
