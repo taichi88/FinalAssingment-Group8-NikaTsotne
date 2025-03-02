@@ -34,7 +34,7 @@ public class UnitOfWork : IUnitOfWork
             _transaction = _connection.BeginTransaction();
             PersonRepository.SetTransaction(_transaction);
             TransactionRepository.SetTransaction(_transaction);
-            CardRepository.SetTransaction(_transaction);
+            //CardRepository.SetTransaction(_transaction);
             AccountRepository.SetTransaction(_transaction);
         }
 

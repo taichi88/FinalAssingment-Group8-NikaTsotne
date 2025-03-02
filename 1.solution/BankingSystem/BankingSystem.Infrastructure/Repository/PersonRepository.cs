@@ -67,4 +67,14 @@ public class PersonRepository : IPersonRepository
 
         return users;
     }
+
+    public async Task<string> GetUserByIdNumberAsync(string IdNumber)
+    {
+        const string query = @"
+            SELECT Id FROM AspNetUsers WHERE IdNumber = @IdNumber";
+
+        var users = await _connection.QueryFirstOrDefaultAsync<string>(query, new { IdNumber }, _transaction);
+
+        return users;
+    }
 }
