@@ -3,7 +3,7 @@ using BankingSystem.Application.DTO.Response;
 using BankingSystem.Application.IServices;
 using Microsoft.AspNetCore.Mvc;
 
-namespace InternetBank.UI.Controllers;
+namespace BankingSystem.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 public class AtmController : ControllerBase
