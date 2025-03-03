@@ -21,12 +21,12 @@ public class CardRepository : ICardRepository
     public async Task CreateCardAsync(Card card)
     {
         const string query =
-            "INSERT INTO Cards(Name, Lastname, CardNumber, ExpirationDate, CVV, PinCode, AccountId) VALUES (@Name, @Lastname, @CardNumber, @ExpirationDate, @CVV, @PinCode, @AccountId)";
+            "INSERT INTO Cards(FirstName, Lastname, CardNumber, ExpirationDate, CVV, PinCode, AccountId) VALUES (@FirstName, @Lastname, @CardNumber, @ExpirationDate, @CVV, @PinCode, @AccountId)";
 
         await _connection.ExecuteAsync(query, card, _transaction);
     }
 
-    public async Task<Card?> GetCardAsync(string cardNumber)
+    public async Task<Card?> GetCardByNumberAsync(string cardNumber)
     {
         return await _connection.QuerySingleOrDefaultAsync<Card>(
             "select * from Cards where cardNumber = @CardNumber", new
@@ -34,9 +34,28 @@ public class CardRepository : ICardRepository
                 CardNumber = cardNumber
             });
     }
+
+    public async Task UpdateCardAsync(Card card)
+    {
+        const string query =
+            "UPDATE Cards SET FirstName = @FirstName, Lastname = @Lastname, CardNumber = @CardNumber, ExpirationDate = @ExpirationDate, CVV = @CVV, PinCode = @PinCode, AccountId = @AccountId WHERE cardNumber = @CardNumber";
+        await _connection.ExecuteAsync(query, card, _transaction);
+    }
+
+
+    public async Task<Account?> GetAccountByCardNumberAsync(string cardNumber)
+    {
+        const string query = @"SELECT a.* 
+                                FROM Accounts a
+                                INNER JOIN Cards c ON a.Id = c.AccountId
+                                WHERE c.CardNumber = @cardNumber";
+
+        return await _connection.QuerySingleOrDefaultAsync<Account>(query, new { cardNumber }, _transaction);
+    }
+
     public async Task<bool> ValidateCardAsync(string cardNumber, string pinCode)
     {
-        var card = await GetCardAsync(cardNumber);
+        var card = await GetCardByNumberAsync(cardNumber);
         return card != null && pinCode == card.PinCode;
     }
 }

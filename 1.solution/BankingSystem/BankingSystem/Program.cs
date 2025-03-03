@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using BankingSystem.Infrastructure;
-using InternetBank.UI.Configure;
+using BankingSystem.Configure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 
@@ -61,6 +61,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+// In Configure:
+app.UseSession();
 
 app.UseHttpsRedirection();
 app.UseAuthentication();

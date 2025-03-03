@@ -13,7 +13,7 @@ using BankingSystem.Infrastructure.UnitOfWork;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.OpenApi.Models;
 
-namespace InternetBank.UI.Configure;
+namespace BankingSystem.Configure;
 
 public static class ServiceRegistration
 {
@@ -34,6 +34,12 @@ public static class ServiceRegistration
         services.AddScoped<IExchangeRateApi, ExchangeRateApi>();
         services.AddScoped<IAtmService, AtmService>();
         services.AddScoped<IPersonService, PersonService>();
+        services.AddScoped<CardAuthorizationFilter>();
+
+        // In ConfigureServices:
+        services.AddSession();
+        services.AddDistributedMemoryCache(); // if not already added
+
         services.AddHttpClient();
 
         services.AddSwaggerGen(c =>
