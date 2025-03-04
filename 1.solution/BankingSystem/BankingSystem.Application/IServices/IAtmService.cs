@@ -7,6 +7,6 @@ public interface IAtmService
 {
     Task<ApiResponse> AuthorizeCardAsync(CardAuthorizationDto cardAuthorizationDto);
     Task<ApiResponse> ViewBalanceAsync(string cardNumber);
-    Task<ApiResponse> WithdrawMoneyAsync(WithdrawMoneyDto withdrawMoneyDto);
-    Task<ApiResponse> ChangePinCodeAsync(ChangePinCodeDto changePinCodeDto);
+    Task<ApiResponse> WithdrawMoneyAsync(string cardNumber, WithdrawMoneyDto withdrawMoneyDto);
+    Task<ApiResponse> ChangePinCodeAsync(string cardNumber, ChangePinCodeDto changePinCodeDto);
 }

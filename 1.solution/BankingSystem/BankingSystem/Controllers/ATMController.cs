@@ -31,8 +31,9 @@ public class AtmController : ControllerBase
 
     [ServiceFilter(typeof(CardAuthorizationFilter))]
     [HttpGet("view-balance")]
-    public async Task<ActionResult<ApiResponse>> ViewBalance([FromQuery] string cardNumber)
+    public async Task<ActionResult<ApiResponse>> ViewBalance()
     {
+        var cardNumber = HttpContext.Session.GetString("AuthorizedCard");
         var response = await _atmService.ViewBalanceAsync(cardNumber);
         if (response.IsSuccess)
         {
@@ -45,7 +46,8 @@ public class AtmController : ControllerBase
     [HttpPost("withdraw-money")]
     public async Task<ActionResult<ApiResponse>> WithdrawMoney(WithdrawMoneyDto withdrawMoneyDto)
     {
-        var response = await _atmService.WithdrawMoneyAsync(withdrawMoneyDto);
+        var cardNumber = HttpContext.Session.GetString("AuthorizedCard");
+        var response = await _atmService.WithdrawMoneyAsync(cardNumber, withdrawMoneyDto);
         if (response.IsSuccess)
         {
             return Ok(response);
@@ -57,7 +59,8 @@ public class AtmController : ControllerBase
     [HttpPost("change-pin")]
     public async Task<ActionResult<ApiResponse>> ChangePinCode(ChangePinCodeDto changePinCodeDto)
     {
-        var response = await _atmService.ChangePinCodeAsync(changePinCodeDto);
+        var cardNumber = HttpContext.Session.GetString("AuthorizedCard");
+        var response = await _atmService.ChangePinCodeAsync(cardNumber, changePinCodeDto);
         if (response.IsSuccess)
         {
             return Ok(response);

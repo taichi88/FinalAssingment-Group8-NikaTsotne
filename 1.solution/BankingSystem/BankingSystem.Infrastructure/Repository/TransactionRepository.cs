@@ -22,8 +22,17 @@ public class TransactionRepository : IAccountTransactionRepository
     public async Task AddAccountTransactionAsync(Transaction transactionObj)
     {
         const string query =
-            "INSERT INTO Transactions(Amount, Currency, TransactionDate, FromAccountId, ToAccountId) VALUES (@Amount, @Currency, @TransactionDate, @FromAccountId, @ToAccountId)";
+            "INSERT INTO Transactions(Amount, Currency, TransactionDate, FromAccountId, ToAccountId, IsATM) VALUES (@Amount, @Currency, @TransactionDate, @FromAccountId, @ToAccountId, @IsATM)";
 
         await _connection.ExecuteAsync(query, transactionObj, _transaction);
     }
+
+    public async Task<IEnumerable<Transaction>> GetTransactionsByAccountIdAsync(int accountId, DateTime date)
+    {
+        const string query =
+            "SELECT * FROM Transactions WHERE FromAccountId = @AccountId AND CAST(TransactionDate AS DATE) = @Date";
+
+        return await _connection.QueryAsync<Transaction>(query, new { AccountId = accountId, Date = date }, _transaction);
+    }
+
 }

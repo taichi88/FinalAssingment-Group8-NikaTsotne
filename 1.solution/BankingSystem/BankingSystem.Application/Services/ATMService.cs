@@ -2,6 +2,7 @@ using System.Net;
 using BankingSystem.Application.DTO;
 using BankingSystem.Application.DTO.Response;
 using BankingSystem.Application.IServices;
+using BankingSystem.Domain.Entities;
 using BankingSystem.Domain.IUnitOfWork;
 
 namespace BankingSystem.Application.Services;
@@ -72,17 +73,87 @@ public class AtmService : IAtmService
         return response;
     }
 
-    public async Task<ApiResponse> WithdrawMoneyAsync(WithdrawMoneyDto withdrawMoneyDto)
-    {
-        throw new NotImplementedException();
-    }
-
-    public async Task<ApiResponse> ChangePinCodeAsync(ChangePinCodeDto changePinCodeDto)
+    public async Task<ApiResponse> WithdrawMoneyAsync(string cardNumber, WithdrawMoneyDto withdrawMoneyDto)
     {
         var response = new ApiResponse();
         try
         {
-            var card = await _unitOfWork.CardRepository.GetCardByNumberAsync(changePinCodeDto.CardNumber);
+            await _unitOfWork.BeginTransactionAsync();
+            var account = await _unitOfWork.CardRepository.GetAccountByCardNumberAsync(cardNumber);
+            if (account == null)
+            {
+                response.StatusCode = HttpStatusCode.NotFound;
+                response.IsSuccess = false;
+                response.ErrorMessages = new List<string> { "Card not found" };
+                return response;
+            }
+
+            // Calculate the total amount including the fee
+            var fee = withdrawMoneyDto.Amount * 0.02m;
+            var totalAmount = withdrawMoneyDto.Amount + fee;
+
+            // Check if the total amount exceeds the account balance
+            if (totalAmount > account.Balance)
+            {
+                response.StatusCode = HttpStatusCode.BadRequest;
+                response.IsSuccess = false;
+                response.ErrorMessages = new List<string> { "Insufficient balance" };
+                return response;
+            }
+
+            // Check if the daily limit is exceeded
+            var transactions = await _unitOfWork.TransactionRepository.GetTransactionsByAccountIdAsync(account.AccountId, DateTime.Now.Date);
+            var dailyTotal = transactions.Where(t => t.IsATM).Sum(t => t.Amount);
+            if (dailyTotal + withdrawMoneyDto.Amount > 10000m)
+            {
+                response.StatusCode = HttpStatusCode.BadRequest;
+                response.IsSuccess = false;
+                response.ErrorMessages = new List<string> { "Daily withdrawal limit exceeded" };
+                return response;
+            }
+
+            // Update the account balance
+            account.Balance -= totalAmount;
+            await _unitOfWork.AccountRepository.UpdateAccountAsync(account);
+
+            // Create the transaction
+            var transaction = new Transaction
+            {
+                FromAccountId = account.AccountId,
+                ToAccountId = account.AccountId, // For ATM withdrawal, from and to account are the same
+                Currency = withdrawMoneyDto.Currency,
+                Amount = withdrawMoneyDto.Amount,
+                TransactionDate = DateTime.Now,
+                IsATM = withdrawMoneyDto.IsATM
+            };
+
+            await _unitOfWork.TransactionRepository.AddAccountTransactionAsync(transaction);
+            await _unitOfWork.CommitAsync();
+
+            response.StatusCode = HttpStatusCode.OK;
+            response.IsSuccess = true;
+            response.Result = new { Balance = account.Balance };
+        }
+        catch (Exception ex)
+        {
+            await _unitOfWork.RollbackAsync();
+            response.StatusCode = HttpStatusCode.InternalServerError;
+            response.IsSuccess = false;
+            response.ErrorMessages = new List<string> { ex.Message };
+        }
+
+        return response;
+    }
+
+
+
+
+    public async Task<ApiResponse> ChangePinCodeAsync(string cardNumber, ChangePinCodeDto changePinCodeDto)
+    {
+        var response = new ApiResponse();
+        try
+        {
+            var card = await _unitOfWork.CardRepository.GetCardByNumberAsync(cardNumber);
             if (card == null)
             {
                 response.StatusCode = HttpStatusCode.NotFound;

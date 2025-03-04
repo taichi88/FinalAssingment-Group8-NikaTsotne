@@ -10,4 +10,5 @@ public class Transaction
     public Account? FromAccount { get; set; }
     public int ToAccountId { get; set; }
     public Account? ToAccount { get; set; }
+    public bool IsATM { get; set; } // Added property
 }

@@ -45,7 +45,7 @@ public class CardRepository : ICardRepository
 
     public async Task<Account?> GetAccountByCardNumberAsync(string cardNumber)
     {
-        const string query = @"SELECT a.* 
+        const string query = @"SELECT a.Id AS AccountId, a.*
                                 FROM Accounts a
                                 INNER JOIN Cards c ON a.Id = c.AccountId
                                 WHERE c.CardNumber = @cardNumber";

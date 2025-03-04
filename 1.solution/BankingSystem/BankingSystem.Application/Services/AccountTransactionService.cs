@@ -24,7 +24,8 @@ public class AccountTransactionService(IUnitOfWork unitOfWork, IExchangeRateApi 
                     ToAccountId = transactionDto.ToAccountId,
                     Currency = fromAccount.Currency,
                     Amount = transactionDto.Amount,
-                    TransactionDate = DateTime.Now
+                    TransactionDate = DateTime.Now,
+                    IsATM = false // Ensure this is set to false for non-ATM transactions
                 };
 
                 if (fromAccount.PersonId != toAccount.PersonId)
