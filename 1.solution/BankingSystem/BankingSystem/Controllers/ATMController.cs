@@ -28,43 +28,4 @@ public class AtmController : ControllerBase
         return BadRequest(response);
     }
 
-
-    [ServiceFilter(typeof(CardAuthorizationFilter))]
-    [HttpGet("view-balance")]
-    public async Task<ActionResult<ApiResponse>> ViewBalance()
-    {
-        var cardNumber = HttpContext.Session.GetString("AuthorizedCard");
-        var response = await _atmService.ViewBalanceAsync(cardNumber);
-        if (response.IsSuccess)
-        {
-            return Ok(response);
-        }
-        return BadRequest(response);
-    }
-
-    [ServiceFilter(typeof(CardAuthorizationFilter))]
-    [HttpPost("withdraw-money")]
-    public async Task<ActionResult<ApiResponse>> WithdrawMoney(WithdrawMoneyDto withdrawMoneyDto)
-    {
-        var cardNumber = HttpContext.Session.GetString("AuthorizedCard");
-        var response = await _atmService.WithdrawMoneyAsync(cardNumber, withdrawMoneyDto);
-        if (response.IsSuccess)
-        {
-            return Ok(response);
-        }
-        return BadRequest(response);
-    }
-
-    [ServiceFilter(typeof(CardAuthorizationFilter))]
-    [HttpPost("change-pin")]
-    public async Task<ActionResult<ApiResponse>> ChangePinCode(ChangePinCodeDto changePinCodeDto)
-    {
-        var cardNumber = HttpContext.Session.GetString("AuthorizedCard");
-        var response = await _atmService.ChangePinCodeAsync(cardNumber, changePinCodeDto);
-        if (response.IsSuccess)
-        {
-            return Ok(response);
-        }
-        return BadRequest(response);
-    }
 }
