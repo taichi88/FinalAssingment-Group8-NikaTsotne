@@ -1,4 +1,7 @@
-﻿namespace BankingSystem.Domain.Entities;
+﻿using System.ComponentModel.DataAnnotations;
+using BankingSystem.Domain.Enums;
+
+namespace BankingSystem.Domain.Entities;
 
 public class Transaction
 {
@@ -11,4 +14,7 @@ public class Transaction
     public int ToAccountId { get; set; }
     public Account? ToAccount { get; set; }
     public bool IsATM { get; set; } // Added property
+    [Required(ErrorMessage = "TransactionType is required.")]
+    [EnumDataType(typeof(TransactionType))]
+    public TransactionType TransactionType { get; set; }
 }
