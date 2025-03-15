@@ -19,6 +19,11 @@ public class AccountTransactionService(IUnitOfWork unitOfWork, IExchangeRateApi 
 
             if (fromAccount.PersonId == userId)
             {
+                if (!Enum.TryParse(transactionDto.TransactionType, out TransactionType transactionType))
+                {
+                    return "Invalid transaction type";
+                }
+
                 var transaction = new Transaction
                 {
                     FromAccountId = transactionDto.FromAccountId,
@@ -27,7 +32,7 @@ public class AccountTransactionService(IUnitOfWork unitOfWork, IExchangeRateApi 
                     Amount = transactionDto.Amount,
                     TransactionDate = DateTime.Now,
                     IsATM = false, // Ensure this is set to false for non-ATM transactions
-                    TransactionType = transactionDto.TransactionType // New field
+                    TransactionType = transactionType // Converted field
                 };
 
                 switch (transaction.TransactionType)
@@ -39,7 +44,7 @@ public class AccountTransactionService(IUnitOfWork unitOfWork, IExchangeRateApi 
                         }
 
                         var transactionFee = transaction.Amount * 0.01m + 0.5m;
-                        if ((transaction.Amount + transactionFee) > fromAccount.Balance) 
+                        if ((transaction.Amount + transactionFee) > fromAccount.Balance)
                         {
                             return "The transaction was failed. You don't have enough money";
                         }

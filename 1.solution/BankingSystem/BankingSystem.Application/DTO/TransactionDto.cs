@@ -15,8 +15,5 @@ public class TransactionDto
 
     [Required(ErrorMessage = "ToAccountId is required.")]
     public int ToAccountId { get; set; }
-    [Required(ErrorMessage = "TransactionType is required.")]
-    [EnumDataType(typeof(TransactionType))]
-    [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TransactionType TransactionType { get; set; }
+    public string TransactionType { get; set; }
 }

@@ -3,6 +3,7 @@ using BankingSystem.Application.DTO;
 using BankingSystem.Application.DTO.Response;
 using BankingSystem.Application.IServices;
 using BankingSystem.Domain.Entities;
+using BankingSystem.Domain.Enums;
 using BankingSystem.Domain.IUnitOfWork;
 
 namespace BankingSystem.Application.Services;
@@ -121,10 +122,11 @@ public class AtmService : IAtmService
             {
                 FromAccountId = account.AccountId,
                 ToAccountId = account.AccountId, // For ATM withdrawal, from and to account are the same
-                Currency = withdrawMoneyDto.Currency,
+                Currency = account.Currency,
                 Amount = withdrawMoneyDto.Amount,
                 TransactionDate = DateTime.Now,
-                IsATM = withdrawMoneyDto.IsATM
+                IsATM = true,
+                TransactionType = null
             };
 
             await _unitOfWork.TransactionRepository.AddAccountTransactionAsync(transaction);

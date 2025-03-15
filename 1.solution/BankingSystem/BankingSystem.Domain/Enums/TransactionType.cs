@@ -2,6 +2,6 @@
 
 public enum TransactionType
 {
-    ToMyAccount,
-    TransferToOthers
+    ToMyAccount = 1,
+    TransferToOthers = 2
 }
