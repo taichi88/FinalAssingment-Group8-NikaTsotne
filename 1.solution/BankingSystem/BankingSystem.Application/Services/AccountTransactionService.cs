@@ -11,80 +11,72 @@ public class AccountTransactionService(IUnitOfWork unitOfWork, IExchangeRateApi 
 {
     public async Task<string> TransactionBetweenAccountsAsync(TransactionDto transactionDto, string userId)
     {
-        try
-        {
-            await unitOfWork.BeginTransactionAsync();
-            var fromAccount = await unitOfWork.AccountRepository.GetAccountByIdAsync(transactionDto.FromAccountId);
-            var toAccount = await unitOfWork.AccountRepository.GetAccountByIdAsync(transactionDto.ToAccountId);
+        await unitOfWork.BeginTransactionAsync();
+        var fromAccount = await unitOfWork.AccountRepository.GetAccountByIdAsync(transactionDto.FromAccountId);
+        var toAccount = await unitOfWork.AccountRepository.GetAccountByIdAsync(transactionDto.ToAccountId);
 
-            if (fromAccount.PersonId == userId)
+        if (fromAccount.PersonId == userId)
+        {
+            if (!Enum.TryParse(transactionDto.TransactionType, out TransactionType transactionType))
             {
-                if (!Enum.TryParse(transactionDto.TransactionType, out TransactionType transactionType))
-                {
+                return "Invalid transaction type";
+            }
+
+            var transaction = new Transaction
+            {
+                FromAccountId = transactionDto.FromAccountId,
+                ToAccountId = transactionDto.ToAccountId,
+                Currency = fromAccount.Currency,
+                Amount = transactionDto.Amount,
+                TransactionDate = DateTime.Now,
+                IsATM = false, // Ensure this is set to false for non-ATM transactions
+                TransactionType = transactionType // Converted field
+            };
+
+            switch (transaction.TransactionType)
+            {
+                case TransactionType.TransferToOthers:
+                    if (fromAccount.PersonId == toAccount.PersonId)
+                    {
+                        return "Transfer to your own account is not allowed";
+                    }
+
+                    var transactionFee = transaction.Amount * 0.01m + 0.5m;
+                    if ((transaction.Amount + transactionFee) > fromAccount.Balance)
+                    {
+                        return "The transaction was failed. You don't have enough money";
+                    }
+                    fromAccount.Balance -= transaction.Amount + transactionFee;
+                    transaction.Amount = await ConvertCurrencyAsync(transaction.Amount, fromAccount.Currency, toAccount.Currency);
+                    toAccount.Balance += transaction.Amount;
+                    break;
+                case TransactionType.ToMyAccount:
+                    if (fromAccount.PersonId != toAccount.PersonId)
+                    {
+                        return "Transfer to another user's account is not allowed";
+                    }
+                    if (transaction.Amount > fromAccount.Balance)
+                    {
+                        return "The transaction was failed. You don't have enough money";
+                    }
+                    fromAccount.Balance -= transaction.Amount;
+                    transaction.Amount = await ConvertCurrencyAsync(transaction.Amount, fromAccount.Currency, toAccount.Currency);
+                    toAccount.Balance += transaction.Amount;
+                    break;
+                default:
                     return "Invalid transaction type";
-                }
-
-                var transaction = new Transaction
-                {
-                    FromAccountId = transactionDto.FromAccountId,
-                    ToAccountId = transactionDto.ToAccountId,
-                    Currency = fromAccount.Currency,
-                    Amount = transactionDto.Amount,
-                    TransactionDate = DateTime.Now,
-                    IsATM = false, // Ensure this is set to false for non-ATM transactions
-                    TransactionType = transactionType // Converted field
-                };
-
-                switch (transaction.TransactionType)
-                {
-                    case TransactionType.TransferToOthers:
-                        if (fromAccount.PersonId == toAccount.PersonId)
-                        {
-                            return "Transfer to your own account is not allowed";
-                        }
-
-                        var transactionFee = transaction.Amount * 0.01m + 0.5m;
-                        if ((transaction.Amount + transactionFee) > fromAccount.Balance)
-                        {
-                            return "The transaction was failed. You don't have enough money";
-                        }
-                        fromAccount.Balance -= transaction.Amount + transactionFee;
-                        transaction.Amount = await ConvertCurrencyAsync(transaction.Amount, fromAccount.Currency, toAccount.Currency);
-                        toAccount.Balance += transaction.Amount;
-                        break;
-                    case TransactionType.ToMyAccount:
-                        if (fromAccount.PersonId != toAccount.PersonId)
-                        {
-                            return "Transfer to another user's account is not allowed";
-                        }
-                        if (transaction.Amount > fromAccount.Balance)
-                        {
-                            return "The transaction was failed. You don't have enough money";
-                        }
-                        fromAccount.Balance -= transaction.Amount;
-                        transaction.Amount = await ConvertCurrencyAsync(transaction.Amount, fromAccount.Currency, toAccount.Currency);
-                        toAccount.Balance += transaction.Amount;
-                        break;
-                    default:
-                        return "Invalid transaction type";
-                }
-
-                await unitOfWork.AccountRepository.UpdateAccountAsync(fromAccount);
-                await unitOfWork.AccountRepository.UpdateAccountAsync(toAccount);
-                await unitOfWork.TransactionRepository.AddAccountTransactionAsync(transaction);
-
-                await unitOfWork.CommitAsync();
-                return "The transaction was completed successfully.";
             }
-            else
-            {
-                return "You are not authorized to perform this transaction";
-            }
+
+            await unitOfWork.AccountRepository.UpdateAccountAsync(fromAccount);
+            await unitOfWork.AccountRepository.UpdateAccountAsync(toAccount);
+            await unitOfWork.TransactionRepository.AddAccountTransactionAsync(transaction);
+
+            await unitOfWork.CommitAsync();
+            return "The transaction was completed successfully.";
         }
-        catch (Exception ex)
+        else
         {
-            await unitOfWork.RollbackAsync();
-            throw ex;
+            return "You are not authorized to perform this transaction";
         }
     }
 
