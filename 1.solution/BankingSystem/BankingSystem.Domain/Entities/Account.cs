@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using BankingSystem.Domain.CustomValidationAttributes;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Runtime.CompilerServices;
 
@@ -9,16 +10,16 @@ public class Account
     public int AccountId { get; set; }
 
     [Required(ErrorMessage = "IBAN is required.")]
-    [StringLength(34, MinimumLength = 15, ErrorMessage = "IBAN must be between 15 and 34 characters.")]
+    [IbanValidation]
     public required string IBAN { get; set; }
 
     [Column(TypeName = "decimal(18,2)")]
     [Required(ErrorMessage = "Balance is required.")]
-    [Range(0, double.MaxValue, ErrorMessage = "Balance cannot be negative.")]
+    [NonNegativeNumberValidation]
     public decimal Balance { get; set; }
 
     [Required(ErrorMessage = "Currency is required.")]
-    [StringLength(3, MinimumLength = 3, ErrorMessage = "Currency must be a 3-letter ISO code.")]
+    [RegularExpression(@"^[A-Z]{3}$", ErrorMessage = "Currency must be a 3-letter ISO code in uppercase.")]
     public required string Currency { get; set; }
 
     [Required(ErrorMessage = "Person ID is required.")]
