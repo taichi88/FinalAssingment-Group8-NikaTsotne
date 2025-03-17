@@ -7,7 +7,7 @@ namespace BankingSystem.Application.DTO;
 
 public class TransactionDto
 {
-    [NegativeNumberValidation(ErrorMessage = "Amount cannot be negative.")]
+    [NonNegativeNumberValidation(ErrorMessage = "Amount cannot be negative.")]
     public decimal Amount { get; set; }
 
     [Required(ErrorMessage = "FromAccountId is required.")]

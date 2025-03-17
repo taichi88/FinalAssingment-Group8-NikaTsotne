@@ -13,7 +13,7 @@ public class AccountRegisterDto
     [IbanValidation(ErrorMessage = "Invalid IBAN format.")]
     public string Iban { get; set; }
 
-    [NegativeNumberValidation(ErrorMessage = "Balance cannot be negative.")]
+    [NonNegativeNumberValidation(ErrorMessage = "Balance cannot be negative.")]
     public decimal Balance { get; set; }
 
     [Required(ErrorMessage = "Currency is required.")]

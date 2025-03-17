@@ -7,25 +7,23 @@ public class IbanValidationAttribute : ValidationAttribute
 {
     private const string IbanPattern = @"^[A-Z]{2}\d{2}[A-Z0-9]{11,30}$";
 
-    protected override ValidationResult IsValid(object? value, ValidationContext validationContext)
+    protected override ValidationResult? IsValid(object? value, ValidationContext validationContext)
     {
-        if (value == null!)
+        if (value == null)
             return new ValidationResult("IBAN is required.");
 
-        var iban = value.ToString()!.Replace(" ", "").ToUpper();
+        string iban = value.ToString()!.Replace(" ", "").ToUpper();
 
         if (!Regex.IsMatch(iban, IbanPattern))
             return new ValidationResult("Invalid IBAN format.");
 
-        return !ValidateIbanChecksum(iban) ? new ValidationResult("Invalid IBAN checksum.") : ValidationResult.Success!;
+        return ValidateIbanChecksum(iban) ? ValidationResult.Success : new ValidationResult("Invalid IBAN checksum.");
     }
 
     private static bool ValidateIbanChecksum(string iban)
     {
-        var rearranged = iban.Substring(4) + iban.Substring(0, 4);
-
-        var numericIban = string.Concat(rearranged.Select(c => char.IsLetter(c) ? (c - 'A' + 10).ToString() : c.ToString()));
-
+        string rearranged = iban[4..] + iban[..4];
+        string numericIban = string.Concat(rearranged.Select(c => char.IsLetter(c) ? (c - 'A' + 10).ToString() : c.ToString()));
         return BigInteger.Parse(numericIban) % 97 == 1;
     }
 }
