@@ -24,10 +24,6 @@ public class AccountTransactionService(IUnitOfWork unitOfWork, IExchangeRateApi 
             if (fromAccount.PersonId != userId)
                 throw new UnauthorizedException("You are not authorized to perform this transaction");
 
-            // Validate transaction type
-            if (!Enum.TryParse(transactionDto.TransactionType, out TransactionType transactionType))
-                throw new ValidationException("Invalid transaction type");
-
             // Create transaction
             var transaction = new Transaction
             {
@@ -37,7 +33,7 @@ public class AccountTransactionService(IUnitOfWork unitOfWork, IExchangeRateApi 
                 Amount = transactionDto.Amount,
                 TransactionDate = DateTime.Now,
                 IsATM = false,
-                TransactionType = transactionType
+                TransactionType = Enum.Parse<TransactionType>(transactionDto.TransactionType)
             };
 
             // Process based on transaction type
@@ -91,23 +87,31 @@ public class AccountTransactionService(IUnitOfWork unitOfWork, IExchangeRateApi 
 
     private async Task<decimal> ConvertCurrencyAsync(decimal amount, string fromCurrency, string toCurrency)
     {
+        // No conversion needed if currencies are the same
         if (fromCurrency == toCurrency)
             return amount;
 
-        var rates = new Dictionary<string, decimal>
-        {
-            { "USD", await exchangeRateApi.GetExchangeRate("USD") },
-            { "EUR", await exchangeRateApi.GetExchangeRate("EUR") }
-        };
+        // Base currency for the system is GEL
+        const string baseCurrency = "GEL";
 
-        return fromCurrency switch
-        {
-            "GEL" when rates.ContainsKey(toCurrency) => amount / rates[toCurrency],
-            "USD" when toCurrency == "GEL" => amount * rates["USD"],
-            "EUR" when toCurrency == "GEL" => amount * rates["EUR"],
-            "USD" when toCurrency == "EUR" => amount * (rates["EUR"] / rates["USD"]),
-            "EUR" when toCurrency == "USD" => amount * (rates["USD"] / rates["EUR"]),
-            _ => amount
-        };
+        // Get exchange rates (cached in a dictionary to avoid multiple API calls)
+        var rates = new Dictionary<string, decimal>();
+        if (fromCurrency != baseCurrency)
+            rates[fromCurrency] = await exchangeRateApi.GetExchangeRate(fromCurrency);
+        if (toCurrency != baseCurrency)
+            rates[toCurrency] = await exchangeRateApi.GetExchangeRate(toCurrency);
+
+        // Conversion logic
+        // 1. Converting from base currency to another
+        if (fromCurrency == baseCurrency)
+            return amount / rates[toCurrency];
+
+        // 2. Converting to base currency
+        if (toCurrency == baseCurrency)
+            return amount * rates[fromCurrency];
+
+        // 3. Cross-currency conversion (through base currency)
+        return amount * (rates[fromCurrency] / rates[toCurrency]);
     }
+
 }
