@@ -1,11 +1,11 @@
 ﻿using BankingSystem.Application.Identity;
-using BankingSystem.Application.Identity;
 using BankingSystem.Application.IServices;
 using BankingSystem.Application.Services;
 using BankingSystem.Domain.Entities;
 using BankingSystem.Domain.ExternalApiContracts;
 using BankingSystem.Domain.IRepository;
 using BankingSystem.Domain.IUnitOfWork;
+using BankingSystem.Filters;
 using BankingSystem.Infrastructure.Data.DatabaseContext;
 using BankingSystem.Infrastructure.Data.ExternalApis;
 using BankingSystem.Infrastructure.Repository;
@@ -35,6 +35,10 @@ public static class ServiceRegistration
         services.AddScoped<IAtmService, AtmService>();
         services.AddScoped<IPersonService, PersonService>();
         services.AddScoped<CardAuthorizationFilter>();
+        services.AddControllers(options =>
+        {
+            options.Filters.Add<ValidateModelAttribute>();
+        });
 
         // In ConfigureServices:
         services.AddSession();

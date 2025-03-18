@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
 namespace BankingSystem.Controllers;
-[ApiController]
 [Route("api/[controller]")]
 public class AtmController : ControllerBase
 {

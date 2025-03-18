@@ -14,9 +14,9 @@ namespace BankingSystem.Controllers
         public async Task<IActionResult> TransferMoney(TransactionDto transactionDto)
         {
             var userId = User.FindFirst("userId")!.Value;
-            var message = await transactionService.TransactionBetweenAccountsAsync(transactionDto, userId);
+            var result = await transactionService.TransactionBetweenAccountsAsync(transactionDto, userId);
 
-            return Ok(new { Message = message });
+            return Ok(new { Message = result });
         }
 
         [Authorize(Roles = "Person")]

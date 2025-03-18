@@ -1,4 +1,5 @@
 ﻿using BankingSystem.Application.DTO;
+using BankingSystem.Application.Exceptions;
 using BankingSystem.Domain.Entities;
 using BankingSystem.Application.IServices;
 using BankingSystem.Domain.ExternalApiContracts;
@@ -11,17 +12,23 @@ public class AccountTransactionService(IUnitOfWork unitOfWork, IExchangeRateApi 
 {
     public async Task<string> TransactionBetweenAccountsAsync(TransactionDto transactionDto, string userId)
     {
-        await unitOfWork.BeginTransactionAsync();
-        var fromAccount = await unitOfWork.AccountRepository.GetAccountByIdAsync(transactionDto.FromAccountId);
-        var toAccount = await unitOfWork.AccountRepository.GetAccountByIdAsync(transactionDto.ToAccountId);
-
-        if (fromAccount.PersonId == userId)
+        try
         {
-            if (!Enum.TryParse(transactionDto.TransactionType, out TransactionType transactionType))
-            {
-                return "Invalid transaction type";
-            }
+            await unitOfWork.BeginTransactionAsync();
 
+            // Get accounts
+            var fromAccount = await unitOfWork.AccountRepository.GetAccountByIdAsync(transactionDto.FromAccountId);
+            var toAccount = await unitOfWork.AccountRepository.GetAccountByIdAsync(transactionDto.ToAccountId);
+
+            // Authorization check
+            if (fromAccount.PersonId != userId)
+                throw new UnauthorizedException("You are not authorized to perform this transaction");
+
+            // Validate transaction type
+            if (!Enum.TryParse(transactionDto.TransactionType, out TransactionType transactionType))
+                throw new ValidationException("Invalid transaction type");
+
+            // Create transaction
             var transaction = new Transaction
             {
                 FromAccountId = transactionDto.FromAccountId,
@@ -29,54 +36,56 @@ public class AccountTransactionService(IUnitOfWork unitOfWork, IExchangeRateApi 
                 Currency = fromAccount.Currency,
                 Amount = transactionDto.Amount,
                 TransactionDate = DateTime.Now,
-                IsATM = false, // Ensure this is set to false for non-ATM transactions
-                TransactionType = transactionType // Converted field
+                IsATM = false,
+                TransactionType = transactionType
             };
 
+            // Process based on transaction type
             switch (transaction.TransactionType)
             {
                 case TransactionType.TransferToOthers:
                     if (fromAccount.PersonId == toAccount.PersonId)
-                    {
-                        return "Transfer to your own account is not allowed";
-                    }
+                        throw new ValidationException("Transfer to your own account is not allowed");
 
                     var transactionFee = transaction.Amount * 0.01m + 0.5m;
                     if ((transaction.Amount + transactionFee) > fromAccount.Balance)
-                    {
-                        return "The transaction was failed. You don't have enough money";
-                    }
+                        throw new ValidationException("The transaction was failed. You don't have enough money");
+
                     fromAccount.Balance -= transaction.Amount + transactionFee;
                     transaction.Amount = await ConvertCurrencyAsync(transaction.Amount, fromAccount.Currency, toAccount.Currency);
                     toAccount.Balance += transaction.Amount;
                     break;
+
                 case TransactionType.ToMyAccount:
                     if (fromAccount.PersonId != toAccount.PersonId)
-                    {
-                        return "Transfer to another user's account is not allowed";
-                    }
+                        throw new ValidationException("Transfer to another user's account is not allowed");
+
                     if (transaction.Amount > fromAccount.Balance)
-                    {
-                        return "The transaction was failed. You don't have enough money";
-                    }
+                        throw new ValidationException("The transaction was failed. You don't have enough money");
+
                     fromAccount.Balance -= transaction.Amount;
                     transaction.Amount = await ConvertCurrencyAsync(transaction.Amount, fromAccount.Currency, toAccount.Currency);
                     toAccount.Balance += transaction.Amount;
                     break;
+
                 default:
-                    return "Invalid transaction type";
+                    throw new ValidationException("Invalid transaction type");
             }
 
+            // Save changes
             await unitOfWork.AccountRepository.UpdateAccountAsync(fromAccount);
             await unitOfWork.AccountRepository.UpdateAccountAsync(toAccount);
             await unitOfWork.TransactionRepository.AddAccountTransactionAsync(transaction);
 
+            // Commit transaction
             await unitOfWork.CommitAsync();
             return "The transaction was completed successfully.";
         }
-        else
+        catch (Exception)
         {
-            return "You are not authorized to perform this transaction";
+            // Single point of rollback
+            await unitOfWork.RollbackAsync();
+            throw; // Re-throw to be handled by middleware
         }
     }
 

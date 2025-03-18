@@ -19,12 +19,15 @@ public class Transaction
     [Required(ErrorMessage = "Transaction date is required.")]
     public DateTime TransactionDate { get; set; }
 
-    [Required(ErrorMessage = "From account ID is required.")]
+    [Required(ErrorMessage = "FromAccountId is required.")]
+    [Range(1, int.MaxValue, ErrorMessage = "FromAccountId must be a positive number.")]
     public int FromAccountId { get; set; }
 
     public Account? FromAccount { get; set; }
 
-    [Required(ErrorMessage = "To account ID is required.")]
+
+    [Required(ErrorMessage = "ToAccountId is required.")]
+    [Range(1, int.MaxValue, ErrorMessage = "ToAccountId must be a positive number.")]
     public int ToAccountId { get; set; }
 
     public Account? ToAccount { get; set; }
