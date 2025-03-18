@@ -16,9 +16,8 @@ public class AccountTransactionService(IUnitOfWork unitOfWork, IExchangeRateApi 
         {
             await unitOfWork.BeginTransactionAsync();
 
-            // Get accounts
-            var fromAccount = await unitOfWork.AccountRepository.GetAccountByIdAsync(transactionDto.FromAccountId);
-            var toAccount = await unitOfWork.AccountRepository.GetAccountByIdAsync(transactionDto.ToAccountId);
+            var fromAccount = await GetAccountSafelyAsync(transactionDto.FromAccountId, "Source");
+            var toAccount = await GetAccountSafelyAsync(transactionDto.ToAccountId, "Destination");
 
             // Authorization check
             if (fromAccount.PersonId != userId)
@@ -85,6 +84,18 @@ public class AccountTransactionService(IUnitOfWork unitOfWork, IExchangeRateApi 
         }
     }
 
+    private async Task<Account> GetAccountSafelyAsync(int accountId, string accountType)
+    {
+        try
+        {
+            return await unitOfWork.AccountRepository.GetAccountByIdAsync(accountId);
+        }
+        catch (InvalidOperationException)
+        {
+            throw new NotFoundException($"{accountType} account {accountId} not found");
+        }
+    }
+
     private async Task<decimal> ConvertCurrencyAsync(decimal amount, string fromCurrency, string toCurrency)
     {
         // No conversion needed if currencies are the same
@@ -113,5 +124,6 @@ public class AccountTransactionService(IUnitOfWork unitOfWork, IExchangeRateApi 
         // 3. Cross-currency conversion (through base currency)
         return amount * (rates[fromCurrency] / rates[toCurrency]);
     }
+
 
 }
