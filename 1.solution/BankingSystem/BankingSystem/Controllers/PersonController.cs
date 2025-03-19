@@ -5,6 +5,7 @@ using BankingSystem.Filters;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
+using BankingSystem.Middleware;
 
 namespace BankingSystem.Controllers
 {
@@ -20,7 +21,7 @@ namespace BankingSystem.Controllers
             var userId = User.FindFirst("userId")!.Value;
             var result = await transactionService.TransactionBetweenAccountsAsync(transactionDto, userId);
 
-            var response = ApiResponse.CreateSuccessResponse(HttpStatusCode.OK, new { Message = result });
+            var response = ErrorHandlingMiddleware.CreateSuccessResponse(HttpStatusCode.OK, new { Message = result });
             return Ok(response);
         }
 
@@ -32,7 +33,7 @@ namespace BankingSystem.Controllers
 
             var result = await personService.GetPersonById(userId);
 
-            var response = ApiResponse.CreateSuccessResponse(HttpStatusCode.OK, result);
+            var response = ErrorHandlingMiddleware.CreateSuccessResponse(HttpStatusCode.OK, result);
             return Ok(response);
         }
     }
