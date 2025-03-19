@@ -6,10 +6,10 @@ using System.IdentityModel.Tokens.Jwt;
 using BankingSystem.Application.DTO;
 using BankingSystem.Application.DTO.Response;
 using BankingSystem.Application.Identity;
-using Microsoft.AspNetCore.Http.HttpResults;
+using BankingSystem.Application.Exceptions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Identity;
-
+using Microsoft.Extensions.Logging;
 
 namespace BankingSystem.Application.Services;
 
@@ -18,36 +18,53 @@ public class PersonAuthService : IPersonAuthService
     private readonly IConfiguration _configuration;
     private readonly UserManager<IdentityPerson> _userManager;
     private readonly RoleManager<IdentityRole> _roleManager;
+    private readonly ILogger<PersonAuthService> _logger;
 
-    public PersonAuthService(IConfiguration configuration, UserManager<IdentityPerson> userManager, RoleManager<IdentityRole> roleManager)
+    public PersonAuthService(
+        IConfiguration configuration,
+        UserManager<IdentityPerson> userManager,
+        RoleManager<IdentityRole> roleManager,
+        ILogger<PersonAuthService> logger)
     {
         _configuration = configuration;
         _userManager = userManager;
         _roleManager = roleManager;
+        _logger = logger;
     }
+
     public async Task<AuthenticationResponse> AuthenticationPersonAsync(PersonLoginDto loginDto)
     {
+        _logger.LogInformation("Attempting authentication for user {Email}", loginDto.Email);
+
         var user = await _userManager.FindByEmailAsync(loginDto.Email);
-        if (user == null || !await _userManager.CheckPasswordAsync(user, loginDto.Password))
+        if (user == null)
         {
-            return new AuthenticationResponse
-            {
-                Token = string.Empty,
-                Email = loginDto.Email,
-                UserId = string.Empty,
-                Expiration = DateTime.MinValue,
-                ErrorMessage = "Invalid email or password"
-            };
+            _logger.LogWarning("Authentication failed: User not found {Email}", loginDto.Email);
+            throw new UnauthorizedException("Invalid email or password");
         }
+
+        if (!await _userManager.CheckPasswordAsync(user, loginDto.Password))
+        {
+            _logger.LogWarning("Authentication failed: Invalid password for user {Email}", loginDto.Email);
+            throw new UnauthorizedException("Invalid email or password");
+        }
+
+        _logger.LogInformation("User {Email} authenticated successfully", loginDto.Email);
         var tokenResponse = await GenerateJwtToken(user);
         return tokenResponse;
     }
 
-    //აქ ხდება ჩიერ სვაგერში შეყვანილი ინფორმაციის (დტო-ში) დაკავშრება და დაესაინება IdentityPerson -ის მოდელისთვის, რომლის ინიციალიზაციაც ხდება 
-    //var user -ში. ამასთან IdentityPerson არის მოდელი რომელიც ინჰერიტანსით იღებს მეთდებს IdentityUser კლასისგან.
-    //შესაბამისად ეს მონაცემები გადაეცემა IdentityPerson და IdentityUsers-ს მიაქვს.
-    public async Task<bool> RegisterPersonAsync(PersonRegisterDto registerDto)
+    public async Task<string> RegisterPersonAsync(PersonRegisterDto registerDto)
     {
+        _logger.LogInformation("Starting user registration for {Email}", registerDto.Email);
+
+        var existingUser = await _userManager.FindByEmailAsync(registerDto.Email);
+        if (existingUser != null)
+        {
+            _logger.LogWarning("Registration failed: Email {Email} already exists", registerDto.Email);
+            throw new ValidationException("User with this email already exists");
+        }
+
         var user = new IdentityPerson
         {
             UserName = registerDto.Email,
@@ -57,57 +74,83 @@ public class PersonAuthService : IPersonAuthService
             BirthDate = registerDto.BirthDate,
             IdNumber = registerDto.IdNumber
         };
-        //ეს არის უზერმენეჯერის მიერ გამოსაყენებელი მეთოდი, და ამ მეთოდი მიდის ეს ინფორმაციები უზერ მენეჯერში და ინახება.
+
         var result = await _userManager.CreateAsync(user, registerDto.Password);
-
         if (!result.Succeeded)
-            return false;
+        {
+            var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+            _logger.LogWarning("User creation failed for {Email}. Errors: {Errors}", registerDto.Email, errors);
+            throw new ValidationException($"User registration failed: {errors}");
+        }
 
-        if (string.IsNullOrEmpty(registerDto.Role))
-            registerDto.Role = "User";
+        var role = string.IsNullOrEmpty(registerDto.Role) ? "User" : registerDto.Role;
+        if (!await _roleManager.RoleExistsAsync(role))
+        {
+            _logger.LogError("Role does not exist: {Role}", role);
+            throw new ValidationException($"Invalid role: {role}");
+        }
 
-        if (!await _roleManager.RoleExistsAsync(registerDto.Role))
-            return false;
+        var roleResult = await _userManager.AddToRoleAsync(user, role);
+        if (!roleResult.Succeeded)
+        {
+            _logger.LogError("Failed to assign role {Role} to user {Email}", role, registerDto.Email);
+            await _userManager.DeleteAsync(user); // Rollback user creation
+            throw new ValidationException("Failed to assign role to user");
+        }
 
-        await _userManager.AddToRoleAsync(user, registerDto.Role);
-
-        return true;
+        _logger.LogInformation("User {Email} registered successfully with role {Role}", registerDto.Email, role);
+        return $"User {registerDto.Email} registered successfully with role {registerDto.Role}";
     }
 
     public async Task<AuthenticationResponse> GenerateJwtToken(IdentityPerson user)
     {
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!));
-        var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+        _logger.LogInformation("Generating JWT token for user {Email}", user.Email);
 
-        var roles = await _userManager.GetRolesAsync(user);
-        var roleClaims = roles.Select(role => new Claim(ClaimTypes.Role, role)).ToList();
-
-        var claims = new List<Claim>
+        try
         {
-            new Claim(JwtRegisteredClaimNames.Sub, user.Email!),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-            new Claim("userId", user.Id)
-        };
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]
+                ?? throw new ValidationException("JWT key is not configured")));
 
-        claims.AddRange(roleClaims);
-        var expiration = DateTime.UtcNow.AddHours(1);
-        
-        var tokenGenerator = new JwtSecurityToken(
-            _configuration["Jwt:Issuer"],
-            _configuration["Jwt:Audience"],
-            claims,
-            expires: expiration,
-            signingCredentials: credentials
-        );
-        JwtSecurityTokenHandler tokenHandler = new JwtSecurityTokenHandler();
-        string token = tokenHandler.WriteToken(tokenGenerator);
-        
-        return new AuthenticationResponse()
+            var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+            var roles = await _userManager.GetRolesAsync(user);
+            var roleClaims = roles.Select(role => new Claim(ClaimTypes.Role, role)).ToList();
+
+            var claims = new List<Claim>
+            {
+                new(JwtRegisteredClaimNames.Sub, user.Email!),
+                new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                new("userId", user.Id)
+            };
+
+            claims.AddRange(roleClaims);
+            var expiration = DateTime.UtcNow.AddHours(1);
+
+            var tokenGenerator = new JwtSecurityToken(
+                _configuration["Jwt:Issuer"],
+                _configuration["Jwt:Audience"],
+                claims,
+                expires: expiration,
+                signingCredentials: credentials
+            );
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var token = tokenHandler.WriteToken(tokenGenerator);
+
+            _logger.LogInformation("JWT token generated successfully for user {Email}", user.Email);
+
+            return new AuthenticationResponse
+            {
+                Token = token,
+                Email = user.Email,
+                UserId = user.Id,
+                Expiration = expiration,
+                Role = string.Join(",", roles)
+            };
+        }
+        catch (Exception ex)
         {
-            Token = token, 
-            Email = user.Email, 
-            UserId = user.Id, 
-            Expiration = expiration
-        };
+            _logger.LogError(ex, "Failed to generate JWT token for user {Email}", user.Email);
+            throw new ValidationException("Failed to generate authentication token");
+        }
     }
 }

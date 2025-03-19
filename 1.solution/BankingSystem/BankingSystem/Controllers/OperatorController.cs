@@ -1,10 +1,15 @@
 ﻿using BankingSystem.Application.DTO;
 using BankingSystem.Application.IServices;
+using BankingSystem.Filters;
+using BankingSystem.Middleware;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Sprache;
+using System.Net;
 
 namespace BankingSystem.Controllers;
-
+[ValidateModel]
+[ApiController]
 [Route("api/[controller]")]
 public class OperatorController : ControllerBase
 {
@@ -20,51 +25,37 @@ public class OperatorController : ControllerBase
 
     [Authorize(Roles = "Operator")]
     [HttpPost("register-user")]
-
-    //From Body აქ საჭირო არ არის, ვინაიდან ის მხოლოდ მაშინ გამოიყენება როდესაც ხდება ორი კომპლექსური პარამეტრის გადაცემა.
-    //მაგალთად ROute, Query, ვინაიდან ასპ.ნეტ ქორი ვერ ხვდება საიდან უნდა წამოიღოს ეს მონაცემი. ამ დროს ვუთითებთ. 
-    //ეხლა ვერ მოვხსნი არ მინდა რამე ავრიო...
-    public async Task<IActionResult> RegisterUser([FromBody] PersonRegisterDto registerModel)
+    public async Task<IActionResult> RegisterUser(PersonRegisterDto registerModel)
     {
-        if (!await _authService.RegisterPersonAsync(registerModel))
-        {
-            return BadRequest("Invalid operation.");
-        }
-
-        return Created();
+        var result = await _authService.RegisterPersonAsync(registerModel);
+        var response = ErrorHandlingMiddleware.CreateSuccessResponse(HttpStatusCode.OK, result);
+        return Ok(response);
     }
 
 
     [HttpPost("login")]
-    public async Task<IActionResult> Login([FromForm] PersonLoginDto loginModel)
+    public async Task<IActionResult> Login( PersonLoginDto loginModel)
     {
         var result = await _authService.AuthenticationPersonAsync(loginModel);
-
-        if (result == null || string.IsNullOrEmpty(result.Token))
-            return Unauthorized(new { message = "Invalid email or password" });
-
-        return Ok(result);
+        var response = ErrorHandlingMiddleware.CreateSuccessResponse(HttpStatusCode.OK, result);
+        return Ok(response);
     }
 
-    //[Authorize(Roles = "Operator")]
+    [Authorize(Roles = "Operator")]
     [HttpPost("create-bank-account")]
-    public async Task<IActionResult> CreateAccount(AccountRegisterDto AccountRegisterDto)
+    public async Task<IActionResult> CreateAccount(AccountRegisterDto accountRegisterDto)
     {
-        var result = await _accountService.CreateAccountAsync(AccountRegisterDto);
-        if (result == false)
-        {
-            return BadRequest();
-        }
-
-        return Ok(new { message = "Account created successfully" });
+        var result = await _accountService.CreateAccountAsync(accountRegisterDto);
+        var response = ErrorHandlingMiddleware.CreateSuccessResponse(HttpStatusCode.OK, result);
+        return Ok(response);
     }
 
     [Authorize(Roles = "Operator")]
     [HttpPost("create-bank-card")]
     public async Task<IActionResult> CreateCard(CardRegisterDto cardRegisterDto)
     {
-        
-        await _cardService.CreateCardAsync(cardRegisterDto);
-        return Ok(new { message = "Card created successfully" });
+        var result = await _cardService.CreateCardAsync(cardRegisterDto);
+        var response = ErrorHandlingMiddleware.CreateSuccessResponse(HttpStatusCode.OK, result);
+        return Ok(response);
     }
 }
