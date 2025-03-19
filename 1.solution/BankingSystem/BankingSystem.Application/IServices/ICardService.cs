@@ -4,5 +4,5 @@ namespace BankingSystem.Application.IServices;
 
 public interface ICardService
 {
-    Task<bool> CreateCardAsync(CardRegisterDto CardRegisterDto);
+    Task<string> CreateCardAsync(CardRegisterDto cardRegisterDto);
 }

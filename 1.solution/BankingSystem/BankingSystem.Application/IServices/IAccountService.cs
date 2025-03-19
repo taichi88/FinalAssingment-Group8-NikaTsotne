@@ -4,5 +4,5 @@ namespace BankingSystem.Application.IServices;
 
 public interface IAccountService
 {
-    Task<bool> CreateAccountAsync(AccountRegisterDto AccountRegisterDto);
+    Task<string> CreateAccountAsync(AccountRegisterDto accountRegisterDto);
 }

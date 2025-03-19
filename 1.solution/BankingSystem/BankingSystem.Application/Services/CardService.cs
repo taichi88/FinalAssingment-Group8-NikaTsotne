@@ -2,39 +2,60 @@
 using BankingSystem.Application.IServices;
 using BankingSystem.Domain.Entities;
 using BankingSystem.Domain.IUnitOfWork;
+using BankingSystem.Application.Exceptions;
+using Microsoft.Extensions.Logging;
 
 namespace BankingSystem.Application.Services;
 
-public class CardService(IUnitOfWork unitOfWork) : ICardService
+public class CardService : ICardService
 {
-    public async Task<bool> CreateCardAsync(CardRegisterDto CardRegisterDto)
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly ILogger<CardService> _logger;
+
+    public CardService(IUnitOfWork unitOfWork, ILogger<CardService> logger)
+    {
+        _unitOfWork = unitOfWork;
+        _logger = logger;
+    }
+
+    public async Task<string> CreateCardAsync(CardRegisterDto cardRegisterDto)
     {
         try
         {
-            await unitOfWork.BeginTransactionAsync();
+            _logger.LogInformation("Creating bank card for account ID {AccountId}", cardRegisterDto.AccountId);
+            await _unitOfWork.BeginTransactionAsync();
 
-            var person = await unitOfWork.AccountRepository.GetAccountByIdAsync(CardRegisterDto.AccountId);
+            // Check if the account exists
+            var account = await _unitOfWork.AccountRepository.GetAccountByIdAsync(cardRegisterDto.AccountId);
+            if (account == null)
+            {
+                _logger.LogWarning("Failed to create card: Account with ID {AccountId} not found", cardRegisterDto.AccountId);
+                throw new NotFoundException($"Account with ID {cardRegisterDto.AccountId} not found");
+            }
 
             var card = new Card
             {
-                CardNumber = CardRegisterDto.CardNumber,
-                Cvv = CardRegisterDto.Cvv,
-                PinCode = CardRegisterDto.PinCode,
-                ExpirationDate = CardRegisterDto.ExpirationDate,
-                AccountId = CardRegisterDto.AccountId,
-                Firstname = CardRegisterDto.Firstname,
-                Lastname = CardRegisterDto.Lastname
+                CardNumber = cardRegisterDto.CardNumber,
+                Cvv = cardRegisterDto.Cvv,
+                PinCode = cardRegisterDto.PinCode,
+                ExpirationDate = cardRegisterDto.ExpirationDate,
+                AccountId = cardRegisterDto.AccountId,
+                Firstname = cardRegisterDto.Firstname,
+                Lastname = cardRegisterDto.Lastname
             };
 
-            await unitOfWork.CardRepository.CreateCardAsync(card);
-            await unitOfWork.CommitAsync();
+            await _unitOfWork.CardRepository.CreateCardAsync(card);
+            await _unitOfWork.CommitAsync();
 
-            return true;
+            _logger.LogInformation("Bank card {CardNumber} created successfully for account {AccountId}",
+                cardRegisterDto.CardNumber, cardRegisterDto.AccountId);
+
+            return "Card created successfully";
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex);
-            return false;
+            await _unitOfWork.RollbackAsync();
+            throw; // Let middleware handle the exception
         }
     }
 }
