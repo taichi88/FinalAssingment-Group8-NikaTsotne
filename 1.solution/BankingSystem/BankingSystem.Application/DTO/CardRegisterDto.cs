@@ -4,9 +4,10 @@ using BankingSystem.Domain.CustomValidationAttributes;
 namespace BankingSystem.Application.DTO;
 
 public class CardRegisterDto
-{ 
+{
 
     [Required(ErrorMessage = "Card number is required.")]
+    [CardNumberValidation(ErrorMessage = "Invalid card number format.")]
     public string CardNumber { get; set; }
 
     [Required(ErrorMessage = "Firstname is required.")]
@@ -18,11 +19,13 @@ public class CardRegisterDto
     [Required(ErrorMessage = "Expiration date is required.")]
     public  DateTime ExpirationDate { get; set; }
 
-    [StringLengthFixedValidation(3, ErrorMessage = "CVV must be exactly 3 characters.")]
-    public  string Cvv { get; set; }
+    [Required(ErrorMessage = "CVV is required.")]
+    [RegularExpression(@"^\d{3}$", ErrorMessage = "CVV must be exactly 3 digits.")]
+    public string Cvv { get; set; }
 
-    [StringLengthFixedValidation(4, ErrorMessage = "Pin code must be exactly 4 characters.")]
-    public  string PinCode { get; set; }
+    [Required(ErrorMessage = "PIN code is required.")]
+    [RegularExpression(@"^\d{4}$", ErrorMessage = "PIN code must be 4 digits.")]
+    public string PinCode { get; set; }
     [Required(ErrorMessage = "AccountId is required.")]
     public int AccountId { get; set; }
 }

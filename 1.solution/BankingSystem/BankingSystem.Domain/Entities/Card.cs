@@ -5,6 +5,8 @@ namespace BankingSystem.Domain.Entities;
 
 public class Card
 {
+    [Key]
+    [Required(ErrorMessage = "CardId is required.")]
     public int CardId { get; set; }
 
     [Required(ErrorMessage = "Firstname is required.")]

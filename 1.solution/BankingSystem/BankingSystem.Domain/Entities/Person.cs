@@ -4,6 +4,7 @@ namespace BankingSystem.Domain.Entities;
 
 public class Person
 {
+    [Key]
     [Required(ErrorMessage = "Person ID is required.")]
     public required string PersonId { get; set; }
 

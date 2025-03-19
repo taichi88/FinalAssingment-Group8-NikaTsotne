@@ -12,15 +12,13 @@ namespace BankingSystem.Middleware
     {
         private readonly RequestDelegate _next;
         private readonly ILogger<ErrorHandlingMiddleware> _logger;
-        private readonly IHostEnvironment _env;
         private readonly ProblemDetailsFactory _problemDetailsFactory;
 
         public ErrorHandlingMiddleware(RequestDelegate next, ILogger<ErrorHandlingMiddleware> logger,
-            IHostEnvironment env, ProblemDetailsFactory problemDetailsFactory)
+            ProblemDetailsFactory problemDetailsFactory)
         {
             _next = next;
             _logger = logger;
-            _env = env;
             _problemDetailsFactory = problemDetailsFactory;
         }
 
@@ -34,7 +32,7 @@ namespace BankingSystem.Middleware
                 // Log successful responses (2xx status codes)
                 if (context.Response.StatusCode >= 200 && context.Response.StatusCode < 300)
                 {
-                    _logger.LogInformation(
+                    _logger.LogDebug(
                         "Request {Method} {Path} completed successfully with status code {StatusCode}",
                         context.Request.Method,
                         context.Request.Path,
@@ -43,7 +41,7 @@ namespace BankingSystem.Middleware
                 // Optionally log other non-error responses (3xx status codes)
                 else if (context.Response.StatusCode >= 300 && context.Response.StatusCode < 400)
                 {
-                    _logger.LogInformation(
+                    _logger.LogDebug(
                         "Request {Method} {Path} redirected with status code {StatusCode}",
                         context.Request.Method,
                         context.Request.Path,
@@ -71,7 +69,7 @@ namespace BankingSystem.Middleware
                 var statusCode = MapExceptionToStatusCode(ex);
                 context.Response.StatusCode = (int)statusCode;
 
-                // Generate response based on accept header or default to ApiResponse
+                // Generate response based on accept header
                 await GenerateErrorResponse(context, ex, statusCode);
             }
         }
@@ -82,19 +80,37 @@ namespace BankingSystem.Middleware
             bool isProblemDetailsRequested = context.Request.Headers.Accept.Any(h =>
                 h.Contains("application/problem+json"));
 
-            // If it's a development environment or ProblemDetails is requested, return detailed ProblemDetails
-            if (_env.IsDevelopment() && isProblemDetailsRequested)
+            if (isProblemDetailsRequested)
             {
+                // Return ProblemDetails format
                 var problemDetails = CreateProblemDetails(context, exception, (int)statusCode);
                 context.Response.ContentType = "application/problem+json";
+
+                // Log the ProblemDetails
+                _logger.LogInformation(
+                    "Returning ProblemDetails for {Method} {Path} with status code {StatusCode}: {Detail}",
+                    context.Request.Method,
+                    context.Request.Path,
+                    (int)statusCode,
+                    problemDetails.Detail);
+
                 await JsonSerializer.SerializeAsync(context.Response.Body, problemDetails,
                     new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
             }
-            // Otherwise return user-friendly ApiResponse format
             else
             {
+                // Return user-friendly ApiResponse format
                 var apiResponse = CreateApiResponse(exception, statusCode);
                 context.Response.ContentType = "application/json";
+
+                // Log the user-friendly message
+                _logger.LogInformation(
+                    "Returning user-friendly ApiResponse for {Method} {Path} with status code {StatusCode}: {ErrorMessage}",
+                    context.Request.Method,
+                    context.Request.Path,
+                    (int)statusCode,
+                    apiResponse.ErrorMessages?.FirstOrDefault() ?? "No error message");
+
                 await JsonSerializer.SerializeAsync(context.Response.Body, apiResponse,
                     new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
             }
@@ -102,9 +118,17 @@ namespace BankingSystem.Middleware
 
         private ProblemDetails CreateProblemDetails(HttpContext context, Exception exception, int statusCode)
         {
+            string detail = exception.ToString();
+
+            // For security in production, consider limiting the detail for certain exceptions
+            if (exception is ValidationException || exception is NotFoundException || exception is UnauthorizedException)
+            {
+                detail = exception.Message;
+            }
+
             return _problemDetailsFactory.CreateProblemDetails(
                 context, statusCode, ReasonPhrases.GetReasonPhrase(statusCode),
-                detail: exception.ToString(), // Always include full details for developers
+                detail: detail,
                 instance: context.Request.Path
             );
         }

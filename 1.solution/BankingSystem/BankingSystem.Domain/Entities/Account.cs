@@ -7,6 +7,8 @@ namespace BankingSystem.Domain.Entities;
 
 public class Account
 {
+    [Key]
+    [Required(ErrorMessage = "Account ID is required.")]
     public int AccountId { get; set; }
 
     [Required(ErrorMessage = "IBAN is required.")]
@@ -19,7 +21,7 @@ public class Account
     public decimal Balance { get; set; }
 
     [Required(ErrorMessage = "Currency is required.")]
-    [RegularExpression(@"^[A-Z]{3}$", ErrorMessage = "Currency must be a 3-letter ISO code in uppercase.")]
+    [AllowedValues("GEL", "USD", "EUR", ErrorMessage = "Currency must be GEL, USD, or EUR.")]
     public required string Currency { get; set; }
 
     [Required(ErrorMessage = "Person ID is required.")]

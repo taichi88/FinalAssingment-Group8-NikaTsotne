@@ -36,9 +36,15 @@ public static class ServiceRegistration
         services.AddScoped<IPersonService, PersonService>();
         services.AddScoped<CardAuthorizationFilter>();
         services.AddControllers(options =>
-        {
-            options.Filters.Add<ValidateModelAttribute>();
-        });
+            {
+                options.Filters.Add<ValidateModelAttribute>();
+            })
+            .ConfigureApiBehaviorOptions(options =>
+            {
+                // Disable automatic 400 response for model validation failures
+                options.SuppressModelStateInvalidFilter = true;
+            });
+
 
         // In ConfigureServices:
         services.AddSession();

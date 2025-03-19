@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Mvc;
 namespace BankingSystem.Controllers;
 
 [Route("api/[controller]")]
-[ApiController]
 public class OperatorController : ControllerBase
 {
     private readonly IPersonAuthService _authService;

@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using BankingSystem.Domain.CustomValidationAttributes;
 
 namespace BankingSystem.Application.DTO;
 
@@ -23,7 +24,7 @@ public class PersonRegisterDto
     public required string Email { get; set; }
 
     [Required(ErrorMessage = "Password is required.")]
-    [MinLength(6, ErrorMessage = "Password must be at least 6 characters.")]
+    [PasswordValidation]
     public required string Password { get; set; }
 
     [Required(ErrorMessage = "Role is required.")]

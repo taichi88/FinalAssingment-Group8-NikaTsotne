@@ -1,12 +1,16 @@
 ﻿using BankingSystem.Application.DTO;
+using BankingSystem.Application.DTO.Response;
 using BankingSystem.Application.IServices;
+using BankingSystem.Filters;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Net;
 
 namespace BankingSystem.Controllers
 {
-    [Route("api/[controller]")]
+    [ValidateModel]
     [ApiController]
+    [Route("api/[controller]")]
     public class PersonController(IAccountTransactionService transactionService, IPersonService personService) : ControllerBase
     {
         [Authorize(Roles = "Person")]
@@ -16,7 +20,8 @@ namespace BankingSystem.Controllers
             var userId = User.FindFirst("userId")!.Value;
             var result = await transactionService.TransactionBetweenAccountsAsync(transactionDto, userId);
 
-            return Ok(new { Message = result });
+            var response = ApiResponse.CreateSuccessResponse(HttpStatusCode.OK, new { Message = result });
+            return Ok(response);
         }
 
         [Authorize(Roles = "Person")]
@@ -27,7 +32,8 @@ namespace BankingSystem.Controllers
 
             var result = await personService.GetPersonById(userId);
 
-            return Ok(result);
+            var response = ApiResponse.CreateSuccessResponse(HttpStatusCode.OK, result);
+            return Ok(response);
         }
     }
 }
