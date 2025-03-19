@@ -1,6 +1,5 @@
-using System.Net;
 using BankingSystem.Application.DTO;
-using BankingSystem.Application.DTO.Response;
+using BankingSystem.Application.Exceptions;
 using BankingSystem.Application.IServices;
 using BankingSystem.Domain.Entities;
 using BankingSystem.Domain.Enums;
@@ -20,120 +19,127 @@ public class AtmService : IAtmService
         _logger = logger;
     }
 
-    public async Task<ApiResponse> AuthorizeCardAsync(CardAuthorizationDto cardAuthorizationDto)
+    public async Task<object?> AuthorizeCardAsync(CardAuthorizationDto cardAuthorizationDto)
     {
         _logger.LogInformation("Authorizing card {CardNumber}", cardAuthorizationDto.CardNumber);
         var authorized = await _unitOfWork.CardRepository.ValidateCardAsync(cardAuthorizationDto.CardNumber, cardAuthorizationDto.PinCode);
+
         if (!authorized)
         {
             _logger.LogWarning("Authorization failed for card {CardNumber}", cardAuthorizationDto.CardNumber);
-            return ApiResponse.CreateErrorResponse(HttpStatusCode.BadRequest, "Card number or pin code is invalid.");
+            throw new ValidationException("Card number or pin code is invalid.");
         }
 
         _logger.LogInformation("Authorization successful for card {CardNumber}", cardAuthorizationDto.CardNumber);
-        return new ApiResponse { StatusCode = HttpStatusCode.NoContent };
+        return null; // No content needed for successful authorization
     }
 
-    public async Task<ApiResponse> ViewBalanceAsync(string cardNumber)
+    public async Task<object> ViewBalanceAsync(string cardNumber)
     {
         _logger.LogInformation("Viewing balance for card {CardNumber}", cardNumber);
         var account = await _unitOfWork.CardRepository.GetAccountByCardNumberAsync(cardNumber);
+
         if (account == null)
         {
             _logger.LogWarning("Card not found {CardNumber}", cardNumber);
-            return ApiResponse.CreateErrorResponse(HttpStatusCode.NotFound, "Card not found");
+            throw new NotFoundException("Card not found");
         }
 
-        return new ApiResponse
-        {
-            StatusCode = HttpStatusCode.OK,
-            IsSuccess = true,
-            Result = new { Balance = account.Balance }
-        };
+        return new { Balance = account.Balance };
     }
 
-    public async Task<ApiResponse> WithdrawMoneyAsync(string cardNumber, WithdrawMoneyDto withdrawMoneyDto)
+    public async Task<object> WithdrawMoneyAsync(string cardNumber, WithdrawMoneyDto withdrawMoneyDto)
     {
-        _logger.LogInformation("Withdrawing money for card {CardNumber}", cardNumber);
-        await _unitOfWork.BeginTransactionAsync();
-        var account = await _unitOfWork.CardRepository.GetAccountByCardNumberAsync(cardNumber);
-        if (account == null)
+        try
         {
-            _logger.LogWarning("Card not found {CardNumber}", cardNumber);
-            return ApiResponse.CreateErrorResponse(HttpStatusCode.NotFound, "Card not found");
+            _logger.LogInformation("Withdrawing money for card {CardNumber}", cardNumber);
+            await _unitOfWork.BeginTransactionAsync();
+
+            var account = await _unitOfWork.CardRepository.GetAccountByCardNumberAsync(cardNumber);
+            if (account == null)
+            {
+                _logger.LogWarning("Card not found {CardNumber}", cardNumber);
+                throw new NotFoundException("Card not found");
+            }
+
+            // Calculate the total amount including the fee
+            var fee = withdrawMoneyDto.Amount * 0.02m;
+            var totalAmount = withdrawMoneyDto.Amount + fee;
+
+            // Check if the total amount exceeds the account balance
+            if (totalAmount > account.Balance)
+            {
+                _logger.LogWarning("Insufficient balance for card {CardNumber}", cardNumber);
+                throw new ValidationException("Insufficient balance");
+            }
+
+            // Check if the daily limit is exceeded
+            var transactions = await _unitOfWork.TransactionRepository.GetTransactionsByAccountIdAsync(account.AccountId, DateTime.Now.Date);
+            var dailyTotal = transactions.Where(t => t.IsATM).Sum(t => t.Amount);
+            if (dailyTotal + withdrawMoneyDto.Amount > 10000m)
+            {
+                _logger.LogWarning("Daily withdrawal limit exceeded for card {CardNumber}", cardNumber);
+                throw new ValidationException("Daily withdrawal limit exceeded");
+            }
+
+            // Update the account balance
+            account.Balance -= totalAmount;
+            await _unitOfWork.AccountRepository.UpdateAccountAsync(account);
+
+            // Create the transaction
+            var transaction = new Transaction
+            {
+                FromAccountId = account.AccountId,
+                ToAccountId = account.AccountId, // For ATM withdrawal, from and to account are the same
+                Currency = account.Currency,
+                Amount = withdrawMoneyDto.Amount,
+                TransactionDate = DateTime.Now,
+                IsATM = true,
+                TransactionType = null
+            };
+
+            await _unitOfWork.TransactionRepository.AddAccountTransactionAsync(transaction);
+            await _unitOfWork.CommitAsync();
+
+            return new { Balance = account.Balance };
         }
-
-        // Calculate the total amount including the fee
-        var fee = withdrawMoneyDto.Amount * 0.02m;
-        var totalAmount = withdrawMoneyDto.Amount + fee;
-
-        // Check if the total amount exceeds the account balance
-        if (totalAmount > account.Balance)
+        catch (Exception)
         {
-            _logger.LogWarning("Insufficient balance for card {CardNumber}", cardNumber);
-            return ApiResponse.CreateErrorResponse(HttpStatusCode.BadRequest, "Insufficient balance");
+            await _unitOfWork.RollbackAsync();
+            throw; // Let middleware handle the exception
         }
-
-        // Check if the daily limit is exceeded
-        var transactions = await _unitOfWork.TransactionRepository.GetTransactionsByAccountIdAsync(account.AccountId, DateTime.Now.Date);
-        var dailyTotal = transactions.Where(t => t.IsATM).Sum(t => t.Amount);
-        if (dailyTotal + withdrawMoneyDto.Amount > 10000m)
-        {
-            _logger.LogWarning("Daily withdrawal limit exceeded for card {CardNumber}", cardNumber);
-            return ApiResponse.CreateErrorResponse(HttpStatusCode.BadRequest, "Daily withdrawal limit exceeded");
-        }
-
-        // Update the account balance
-        account.Balance -= totalAmount;
-        await _unitOfWork.AccountRepository.UpdateAccountAsync(account);
-
-        // Create the transaction
-        var transaction = new Transaction
-        {
-            FromAccountId = account.AccountId,
-            ToAccountId = account.AccountId, // For ATM withdrawal, from and to account are the same
-            Currency = account.Currency,
-            Amount = withdrawMoneyDto.Amount,
-            TransactionDate = DateTime.Now,
-            IsATM = true,
-            TransactionType = null
-        };
-
-        await _unitOfWork.TransactionRepository.AddAccountTransactionAsync(transaction);
-        await _unitOfWork.CommitAsync();
-
-        return new ApiResponse
-        {
-            StatusCode = HttpStatusCode.OK,
-            IsSuccess = true,
-            Result = new { Balance = account.Balance }
-        };
     }
 
-    public async Task<ApiResponse> ChangePinCodeAsync(string cardNumber, ChangePinCodeDto changePinCodeDto)
+    public async Task<object?> ChangePinCodeAsync(string cardNumber, ChangePinCodeDto changePinCodeDto)
     {
-        _logger.LogInformation("Changing PIN code for card {CardNumber}", cardNumber);
-        var card = await _unitOfWork.CardRepository.GetCardByNumberAsync(cardNumber);
-        if (card == null)
+        try
         {
-            _logger.LogWarning("Card not found {CardNumber}", cardNumber);
-            return ApiResponse.CreateErrorResponse(HttpStatusCode.NotFound, "Card not found");
-        }
-        else if (card.PinCode != changePinCodeDto.OldPinCode)
-        {
-            _logger.LogWarning("Old PIN code is incorrect for card {CardNumber}", cardNumber);
-            return ApiResponse.CreateErrorResponse(HttpStatusCode.BadRequest, "Old PIN code is incorrect");
-        }
+            _logger.LogInformation("Changing PIN code for card {CardNumber}", cardNumber);
+            await _unitOfWork.BeginTransactionAsync();
 
-        card.PinCode = changePinCodeDto.NewPinCode;
-        await _unitOfWork.CardRepository.UpdateCardAsync(card);
-        await _unitOfWork.CommitAsync();
+            var card = await _unitOfWork.CardRepository.GetCardByNumberAsync(cardNumber);
+            if (card == null)
+            {
+                _logger.LogWarning("Card not found {CardNumber}", cardNumber);
+                throw new NotFoundException("Card not found");
+            }
 
-        return new ApiResponse
+            if (card.PinCode != changePinCodeDto.OldPinCode)
+            {
+                _logger.LogWarning("Old PIN code is incorrect for card {CardNumber}", cardNumber);
+                throw new ValidationException("Old PIN code is incorrect");
+            }
+
+            card.PinCode = changePinCodeDto.NewPinCode;
+            await _unitOfWork.CardRepository.UpdateCardAsync(card);
+            await _unitOfWork.CommitAsync();
+
+            return null; // No content needed for successful PIN change
+        }
+        catch (Exception)
         {
-            StatusCode = HttpStatusCode.OK,
-            IsSuccess = true
-        };
+            await _unitOfWork.RollbackAsync();
+            throw; // Let middleware handle the exception
+        }
     }
 }
-
