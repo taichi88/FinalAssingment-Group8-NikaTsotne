@@ -19,22 +19,44 @@ public class AtmService : IAtmService
         _logger = logger;
     }
 
-    public async Task<object?> AuthorizeCardAsync(CardAuthorizationDto cardAuthorizationDto)
+    public async Task<string> AuthorizeCardAsync(CardAuthorizationDto cardAuthorizationDto)
     {
         _logger.LogInformation("Authorizing card {CardNumber}", cardAuthorizationDto.CardNumber);
-        var authorized = await _unitOfWork.CardRepository.ValidateCardAsync(cardAuthorizationDto.CardNumber, cardAuthorizationDto.PinCode);
 
-        if (!authorized)
+        // First validate credentials using the repository method
+        var isValidCredentials = await _unitOfWork.CardRepository.ValidateCardAsync(
+            cardAuthorizationDto.CardNumber,
+            cardAuthorizationDto.PinCode);
+
+        if (!isValidCredentials)
         {
-            _logger.LogWarning("Authorization failed for card {CardNumber}", cardAuthorizationDto.CardNumber);
+            _logger.LogWarning("Authorization failed for card {CardNumber}: invalid credentials", cardAuthorizationDto.CardNumber);
             throw new ValidationException("Card number or pin code is invalid.");
         }
 
+        // Then get the card to check expiration
+        var card = await _unitOfWork.CardRepository.GetCardByNumberAsync(cardAuthorizationDto.CardNumber);
+
+        // This check is mostly a safeguard as ValidateCardAsync should have confirmed the card exists
+        if (card == null)
+        {
+            _logger.LogWarning("Card not found after validation {CardNumber}", cardAuthorizationDto.CardNumber);
+            throw new NotFoundException("Card not found");
+        }
+
+        // Check if the card has expired
+        if (card.ExpirationDate < DateTime.Now.Date)
+        {
+            _logger.LogWarning("Authorization failed for card {CardNumber}: card expired on {ExpirationDate}",
+                cardAuthorizationDto.CardNumber, card.ExpirationDate.ToShortDateString());
+            throw new ValidationException("Card has expired.");
+        }
+
         _logger.LogInformation("Authorization successful for card {CardNumber}", cardAuthorizationDto.CardNumber);
-        return null; // No content needed for successful authorization
+        return "Card authorized successfully";
     }
 
-    public async Task<object> ViewBalanceAsync(string cardNumber)
+    public async Task<string> ViewBalanceAsync(string cardNumber)
     {
         _logger.LogInformation("Viewing balance for card {CardNumber}", cardNumber);
         var account = await _unitOfWork.CardRepository.GetAccountByCardNumberAsync(cardNumber);
@@ -45,10 +67,10 @@ public class AtmService : IAtmService
             throw new NotFoundException("Card not found");
         }
 
-        return new { Balance = account.Balance };
+        return $"Your balance is {account.Balance} {account.Currency}";
     }
 
-    public async Task<object> WithdrawMoneyAsync(string cardNumber, WithdrawMoneyDto withdrawMoneyDto)
+    public async Task<string> WithdrawMoneyAsync(string cardNumber, WithdrawMoneyDto withdrawMoneyDto)
     {
         try
         {
@@ -101,7 +123,7 @@ public class AtmService : IAtmService
             await _unitOfWork.TransactionRepository.AddAccountTransactionAsync(transaction);
             await _unitOfWork.CommitAsync();
 
-            return new { Balance = account.Balance };
+            return $"Withdrawal successful. You withdrew {withdrawMoneyDto.Amount} {account.Currency}. Your remaining balance is {account.Balance} {account.Currency}";
         }
         catch (Exception)
         {
@@ -110,7 +132,7 @@ public class AtmService : IAtmService
         }
     }
 
-    public async Task<object?> ChangePinCodeAsync(string cardNumber, ChangePinCodeDto changePinCodeDto)
+    public async Task<string> ChangePinCodeAsync(string cardNumber, ChangePinCodeDto changePinCodeDto)
     {
         try
         {
@@ -134,7 +156,7 @@ public class AtmService : IAtmService
             await _unitOfWork.CardRepository.UpdateCardAsync(card);
             await _unitOfWork.CommitAsync();
 
-            return null; // No content needed for successful PIN change
+            return "PIN code changed successfully";
         }
         catch (Exception)
         {

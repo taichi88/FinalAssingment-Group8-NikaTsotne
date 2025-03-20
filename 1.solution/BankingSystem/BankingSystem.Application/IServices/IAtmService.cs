@@ -1,9 +1,11 @@
 using BankingSystem.Application.DTO;
 
+namespace BankingSystem.Application.IServices;
+
 public interface IAtmService
 {
-    Task<object?> AuthorizeCardAsync(CardAuthorizationDto cardAuthorizationDto);
-    Task<object> ViewBalanceAsync(string cardNumber);
-    Task<object> WithdrawMoneyAsync(string cardNumber, WithdrawMoneyDto withdrawMoneyDto);
-    Task<object?> ChangePinCodeAsync(string cardNumber, ChangePinCodeDto changePinCodeDto);
+    Task<string> AuthorizeCardAsync(CardAuthorizationDto cardAuthorizationDto);
+    Task<string> ViewBalanceAsync(string cardNumber);
+    Task<string> WithdrawMoneyAsync(string cardNumber, WithdrawMoneyDto withdrawMoneyDto);
+    Task<string> ChangePinCodeAsync(string cardNumber, ChangePinCodeDto changePinCodeDto);
 }
