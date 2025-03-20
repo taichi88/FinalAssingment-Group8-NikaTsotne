@@ -47,6 +47,7 @@ public class AccountTransactionService(IUnitOfWork unitOfWork, IExchangeRateApi 
                         throw new ValidationException("The transaction was failed. You don't have enough money");
 
                     fromAccount.Balance -= transaction.Amount + transactionFee;
+                    transaction.TransactionFee = transactionFee;
                     transaction.Amount = await ConvertCurrencyAsync(transaction.Amount, fromAccount.Currency, toAccount.Currency);
                     toAccount.Balance += transaction.Amount;
                     break;
@@ -59,6 +60,7 @@ public class AccountTransactionService(IUnitOfWork unitOfWork, IExchangeRateApi 
                         throw new ValidationException("The transaction was failed. You don't have enough money");
 
                     fromAccount.Balance -= transaction.Amount;
+                    transaction.TransactionFee = 0; // No fee for this transaction type
                     transaction.Amount = await ConvertCurrencyAsync(transaction.Amount, fromAccount.Currency, toAccount.Currency);
                     toAccount.Balance += transaction.Amount;
                     break;
@@ -83,6 +85,7 @@ public class AccountTransactionService(IUnitOfWork unitOfWork, IExchangeRateApi 
             throw; // Re-throw to be handled by middleware
         }
     }
+
 
     private async Task<Account> GetAccountSafelyAsync(int accountId, string accountType)
     {

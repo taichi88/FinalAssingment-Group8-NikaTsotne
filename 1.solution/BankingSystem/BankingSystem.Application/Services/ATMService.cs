@@ -115,6 +115,7 @@ public class AtmService : IAtmService
                 ToAccountId = account.AccountId, // For ATM withdrawal, from and to account are the same
                 Currency = account.Currency,
                 Amount = withdrawMoneyDto.Amount,
+                TransactionFee = fee,
                 TransactionDate = DateTime.Now,
                 IsATM = true,
                 TransactionType = null
@@ -131,6 +132,7 @@ public class AtmService : IAtmService
             throw; // Let middleware handle the exception
         }
     }
+
 
     public async Task<string> ChangePinCodeAsync(string cardNumber, ChangePinCodeDto changePinCodeDto)
     {
