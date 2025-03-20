@@ -35,6 +35,12 @@ public static class ServiceRegistration
         services.AddScoped<IAtmService, AtmService>();
         services.AddScoped<IPersonService, PersonService>();
         services.AddScoped<CardAuthorizationFilter>();
+
+        // Register services
+        services.AddScoped<IReportService, ReportService>();
+        services.AddScoped<IReportRepository, ReportRepository>();
+
+
         services.AddControllers(options =>
             {
                 options.Filters.Add<ValidateModelAttribute>();
