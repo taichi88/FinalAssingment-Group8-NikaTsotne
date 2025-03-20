@@ -72,7 +72,8 @@ public class PersonAuthService : IPersonAuthService
             Name = registerDto.Name,
             Lastname = registerDto.Lastname,
             BirthDate = registerDto.BirthDate,
-            IdNumber = registerDto.IdNumber
+            IdNumber = registerDto.IdNumber,
+            RegistrationDate = DateOnly.FromDateTime(DateTime.Now)
         };
 
         var result = await _userManager.CreateAsync(user, registerDto.Password);

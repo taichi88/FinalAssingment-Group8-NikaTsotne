@@ -5,7 +5,7 @@ CREATE TABLE Accounts(
 	Id INT PRIMARY KEY IDENTITY(1,1) NOT NULL,
 	IBAN NVARCHAR(MAX) NOT NULL,
 	Balance decimal(18,2) NOT NULL,
-	Currency NVARCHAR(MAX) NOT NULL,
+	Currency NVARCHAR(3) NOT NULL,
 	PersonId NVARCHAR(450) NOT NULL,
 
 	FOREIGN KEY (PersonId)
@@ -36,6 +36,8 @@ CREATE TABLE Transactions(
 	TransactionDate DATE NOT NULL,
 	FromAccountId INT NOT NULL,
 	ToAccountId INT NOT NULL,
+	IsATM BIT NULL,
+	TransactionType INT NULL,
 	FOREIGN KEY (FromAccountId)
 	REFERENCES Accounts(Id),
 

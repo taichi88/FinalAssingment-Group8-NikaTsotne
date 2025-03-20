@@ -25,7 +25,8 @@ public class Person
     [Required(ErrorMessage = "Email is required.")]
     [EmailAddress(ErrorMessage = "Invalid email format.")]
     public required string Email { get; set; }
-
+    [Required(ErrorMessage = "Registration date is required")]
+    public DateOnly RegistrationDate { get; set; }
     public IList<Account> Accounts { get; set; }
     public IList<Card> Cards { get; set; }
 }

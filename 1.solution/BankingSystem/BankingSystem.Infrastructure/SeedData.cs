@@ -32,12 +32,13 @@ public class TestDataSeeder
         {
             var identityPerson = new IdentityPerson
             {
-                Name = "Operator",
-                UserName = "Operator",
-                Email = "test@test.com",
-                IdNumber = "12312312312",
-                Lastname = "Test",
-                BirthDate = DateTime.Now
+                Name = "Operator1",
+                UserName = "Operator1",
+                Email = "test@test1.com",
+                IdNumber = "12312312311",
+                Lastname = "Test1",
+                BirthDate = DateTime.Now,
+                RegistrationDate = DateOnly.FromDateTime(DateTime.Now)
             };
 
             var test = await _userManager.CreateAsync(identityPerson, "P@ssword!@#$5");
