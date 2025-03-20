@@ -12,6 +12,10 @@ public class Transaction
     [Range(0.01, double.MaxValue, ErrorMessage = "Amount must be greater than zero.")]
     public decimal Amount { get; set; }
 
+    [Required(ErrorMessage = "Transaction fee is required.")]
+    [Range(0, double.MaxValue, ErrorMessage = "Transaction fee cannot be negative.")]
+    public decimal TransactionFee { get; set; }
+
     [Required(ErrorMessage = "Currency is required.")]
     [RegularExpression(@"^[A-Z]{3}$", ErrorMessage = "Currency must be a 3-letter ISO code in uppercase.")]
     public required string Currency { get; set; }
