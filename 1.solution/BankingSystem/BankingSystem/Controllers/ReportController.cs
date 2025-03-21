@@ -22,7 +22,7 @@ namespace BankingSystem.Controllers
             _logger = logger;
         }
 
-        //[Authorize(Roles = "Manager")]
+        [Authorize(Roles = "Manager")]
         [HttpGet("user-statistics")]
         public async Task<IActionResult> GetUserStatistics()
         {

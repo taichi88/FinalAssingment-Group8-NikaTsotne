@@ -20,7 +20,7 @@ public class TestDataSeeder
 
     public async Task SeedInitialDataAsync()
     {
-        var roles = new[] { "Operator", "Person" };
+        var roles = new[] { "Operator", "Person", "Manager" };
 
         foreach (var role in roles)
         {
@@ -28,21 +28,21 @@ public class TestDataSeeder
                 await _roleManager.CreateAsync(new IdentityRole(role));
         }
 
-        if (await _userManager.FindByNameAsync("Operator") is null)
+        if (await _userManager.FindByNameAsync("Manager") is null)
         {
             var identityPerson = new IdentityPerson
             {
-                Name = "Operator1",
-                UserName = "Operator1",
-                Email = "test@test1.com",
-                IdNumber = "12312312311",
-                Lastname = "Test1",
+                Name = "Manager",
+                UserName = "ManagerManager",
+                Email = "Manager@test.com",
+                IdNumber = "12345678906",
+                Lastname = "ManagerManager",
                 BirthDate = DateTime.Now,
                 RegistrationDate = DateOnly.FromDateTime(DateTime.Now)
             };
 
             var test = await _userManager.CreateAsync(identityPerson, "P@ssword!@#$5");
-            await _userManager.AddToRoleAsync(identityPerson, "Operator");
+            await _userManager.AddToRoleAsync(identityPerson, "Manager");
         }
     }
 }
