@@ -8,4 +8,3 @@ CREATE TABLE Accounts(
 	FOREIGN KEY (PersonId)
 	REFERENCES AspNetUsers(Id)
 )
-GO

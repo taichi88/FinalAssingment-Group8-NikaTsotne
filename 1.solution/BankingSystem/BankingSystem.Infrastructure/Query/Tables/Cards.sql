@@ -11,4 +11,3 @@ CREATE TABLE Cards(
 	FOREIGN KEY (AccountId)
 	REFERENCES Accounts(Id)
 )
-GO

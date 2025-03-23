@@ -28,4 +28,3 @@ BEGIN
     GROUP BY d.Day
     ORDER BY d.Day;
 END;
-GO

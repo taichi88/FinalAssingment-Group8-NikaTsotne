@@ -8,4 +8,3 @@ BEGIN
     FROM Transactions
     WHERE TransactionDate >= DATEADD(YEAR, -1, GETDATE());
 END;
-GO

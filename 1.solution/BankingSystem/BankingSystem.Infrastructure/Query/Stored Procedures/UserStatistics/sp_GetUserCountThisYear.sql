@@ -8,4 +8,3 @@ BEGIN
     FROM AspNetUsers
     WHERE YEAR(RegistrationDate) = YEAR(GETDATE());
 END;
-GO

@@ -8,4 +8,3 @@ BEGIN
     FROM AspNetUsers
     WHERE RegistrationDate >= DATEADD(YEAR, -1, GETDATE());
 END;
-GO

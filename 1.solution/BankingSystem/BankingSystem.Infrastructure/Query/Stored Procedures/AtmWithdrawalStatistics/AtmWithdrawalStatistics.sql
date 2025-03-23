@@ -8,4 +8,3 @@ BEGIN
     FROM Transactions
     WHERE IsATM = 1;
 END;
-GO

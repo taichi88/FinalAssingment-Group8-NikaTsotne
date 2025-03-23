@@ -8,4 +8,3 @@ BEGIN
     FROM Transactions
     WHERE TransactionDate >= DATEADD(MONTH, -6, GETDATE());
 END;
-GO

@@ -14,6 +14,7 @@ using System.Text.Json.Serialization;
 using BankingSystem.Middleware;
 using Serilog;
 using Serilog.Events;
+using BankingSystem.Infrastructure.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -39,8 +40,10 @@ builder.Services
     });
 
 builder.Services.AddDbContext<BankingSystemDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"), b => b.MigrationsAssembly("BankingSystem")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"), b => b.MigrationsAssembly("BankingSystem.Infrastructure")));
 builder.Services.AddTransient<TestDataSeeder>();
+// Register the database initializer
+builder.Services.AddTransient<DatabaseInitializer>();
 
 builder.Services.AddApplicationServices();
 
@@ -100,10 +103,11 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+// Initialize database before starting the application
 using (var scope = app.Services.CreateScope())
 {
-    var seeder = scope.ServiceProvider.GetRequiredService<TestDataSeeder>();
-    await seeder.SeedAsync();
+    var dbInitializer = scope.ServiceProvider.GetRequiredService<DatabaseInitializer>();
+    await dbInitializer.InitializeAsync();
 }
 
 app.Run();

@@ -14,4 +14,3 @@ CREATE TABLE Transactions(
 	FOREIGN KEY (ToAccountId)
 	REFERENCES Accounts(Id)
 )
-GO

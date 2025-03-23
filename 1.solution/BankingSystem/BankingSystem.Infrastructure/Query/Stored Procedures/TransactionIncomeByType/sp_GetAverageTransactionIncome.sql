@@ -15,4 +15,3 @@ BEGIN
         GROUP BY Currency
     ) t ON c.Currency = t.Currency;
 END;
-GO

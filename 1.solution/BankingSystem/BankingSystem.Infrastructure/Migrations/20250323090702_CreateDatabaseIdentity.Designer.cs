@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BankingSystem.Infrastructure.Migrations
 {
     [DbContext(typeof(BankingSystemDbContext))]
-    [Migration("20250225125533_CreateIdentity")]
-    partial class CreateIdentity
+    [Migration("20250323090702_CreateDatabaseIdentity")]
+    partial class CreateDatabaseIdentity
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
