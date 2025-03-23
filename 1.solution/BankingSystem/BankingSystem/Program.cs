@@ -15,6 +15,7 @@ using BankingSystem.Middleware;
 using Serilog;
 using Serilog.Events;
 using BankingSystem.Infrastructure.Data;
+using BankingSystem.Infrastructure.DataSeeding;
 
 var builder = WebApplication.CreateBuilder(args);
 

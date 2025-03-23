@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
 using System.Data;
+using BankingSystem.Infrastructure.DataSeeding;
 using Dapper;
 
 namespace BankingSystem.Infrastructure.Data;
