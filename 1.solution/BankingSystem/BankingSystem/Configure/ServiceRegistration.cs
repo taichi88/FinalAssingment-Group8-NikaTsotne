@@ -35,6 +35,9 @@ public static class ServiceRegistration
         services.AddScoped<IAtmService, AtmService>();
         services.AddScoped<IPersonService, PersonService>();
         services.AddScoped<CardAuthorizationFilter>();
+        // Add this line in AddApplicationServices method
+        services.AddScoped<IAtmTokenService, AtmTokenService>();
+
 
         // Register services
         services.AddScoped<IReportService, ReportService>();
