@@ -4,7 +4,6 @@ using BankingSystem.Filters;
 using BankingSystem.Middleware;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Sprache;
 using System.Net;
 
 namespace BankingSystem.Controllers;
@@ -28,15 +27,6 @@ public class OperatorController : ControllerBase
     public async Task<IActionResult> RegisterUser(PersonRegisterDto registerModel)
     {
         var result = await _authService.RegisterPersonAsync(registerModel);
-        var response = ErrorHandlingMiddleware.CreateSuccessResponse(HttpStatusCode.OK, result);
-        return Ok(response);
-    }
-
-
-    [HttpPost("login")]
-    public async Task<IActionResult> Login( PersonLoginDto loginModel)
-    {
-        var result = await _authService.AuthenticationPersonAsync(loginModel);
         var response = ErrorHandlingMiddleware.CreateSuccessResponse(HttpStatusCode.OK, result);
         return Ok(response);
     }
