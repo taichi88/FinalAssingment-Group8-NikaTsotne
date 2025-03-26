@@ -28,6 +28,6 @@ public class PersonRegisterDto
     public required string Password { get; set; }
 
     [Required(ErrorMessage = "Role is required.")]
-    [AllowedValues("Operator", "Person", ErrorMessage = "Role must be either 'Operator' or 'Person'.")]
+    [AllowedValues("Operator", "Person", "Manager", ErrorMessage = "Role must be either 'Operator' 'Person' or 'Manager'.")]
     public required string Role { get; set; }
 }
