@@ -124,7 +124,7 @@ public class PersonAuthService : IPersonAuthService
             };
 
             claims.AddRange(roleClaims);
-            var expiration = DateTime.UtcNow.AddHours(1);
+            var expiration = DateTime.UtcNow.AddMinutes(30);
 
             var tokenGenerator = new JwtSecurityToken(
                 _configuration["Jwt:Issuer"],
