@@ -14,6 +14,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddApiServices(builder.Configuration);
 builder.Services.AddInfrastructureServices(builder.Configuration);
 builder.Services.AddApplicationServices();
+builder.Services.AddMemoryCache();
 
 // Configure Serilog
 builder.Host.UseSerilog((context, configuration) => configuration

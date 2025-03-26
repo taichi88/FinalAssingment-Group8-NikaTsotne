@@ -108,12 +108,20 @@ public class AccountTransactionService(IUnitOfWork unitOfWork, IExchangeRateApi 
         // Base currency for the system is GEL
         const string baseCurrency = "GEL";
 
-        // Get exchange rates (cached in a dictionary to avoid multiple API calls)
-        var rates = new Dictionary<string, decimal>();
+        // Get exchange rates using a thread-safe ConcurrentDictionary
+        var rates = new System.Collections.Concurrent.ConcurrentDictionary<string, decimal>();
+        
         if (fromCurrency != baseCurrency)
-            rates[fromCurrency] = await exchangeRateApi.GetExchangeRate(fromCurrency);
+        {
+            var fromRate = await exchangeRateApi.GetExchangeRate(fromCurrency);
+            rates.TryAdd(fromCurrency, fromRate);
+        }
+        
         if (toCurrency != baseCurrency)
-            rates[toCurrency] = await exchangeRateApi.GetExchangeRate(toCurrency);
+        {
+            var toRate = await exchangeRateApi.GetExchangeRate(toCurrency);
+            rates.TryAdd(toCurrency, toRate);
+        }
 
         // Conversion logic
         // 1. Converting from base currency to another
