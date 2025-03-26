@@ -34,7 +34,6 @@ public static class ServiceRegistration
         services.AddScoped<IExchangeRateApi, ExchangeRateApi>();
         services.AddScoped<IAtmService, AtmService>();
         services.AddScoped<IPersonService, PersonService>();
-        services.AddScoped<CardAuthorizationFilter>();
         // Add this line in AddApplicationServices method
         services.AddScoped<IAtmTokenService, AtmTokenService>();
 
@@ -53,11 +52,6 @@ public static class ServiceRegistration
                 // Disable automatic 400 response for model validation failures
                 options.SuppressModelStateInvalidFilter = true;
             });
-
-
-        // In ConfigureServices:
-        services.AddSession();
-        services.AddDistributedMemoryCache(); // if not already added
 
         services.AddHttpClient();
 
