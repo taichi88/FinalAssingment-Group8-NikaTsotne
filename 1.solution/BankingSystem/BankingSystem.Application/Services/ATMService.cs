@@ -1,3 +1,4 @@
+using BankingSystem.Application.Constants;
 using BankingSystem.Application.DTO;
 using BankingSystem.Application.Exceptions;
 using BankingSystem.Application.Helpers;
@@ -13,11 +14,13 @@ public class AtmService : IAtmService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<AtmService> _logger;
+    private readonly AtmConstants _atmConstants;
 
-    public AtmService(IUnitOfWork unitOfWork, ILogger<AtmService> logger)
+    public AtmService(IUnitOfWork unitOfWork, ILogger<AtmService> logger, AtmConstants atmConstants)
     {
         _unitOfWork = unitOfWork;
         _logger = logger;
+        _atmConstants = atmConstants;
     }
 
     public async Task<string> AuthorizeCardAsync(CardAuthorizationDto cardAuthorizationDto)
@@ -85,8 +88,8 @@ public class AtmService : IAtmService
                 throw new NotFoundException("Card not found");
             }
 
-            // Calculate the total amount including the fee
-            var fee = withdrawMoneyDto.Amount * 0.02m;
+            // Calculate the total amount including the fee using the configured fee rate
+            var fee = withdrawMoneyDto.Amount * _atmConstants.FeeRate;
             var totalAmount = withdrawMoneyDto.Amount + fee;
 
             // Check if the total amount exceeds the account balance
@@ -96,10 +99,10 @@ public class AtmService : IAtmService
                 throw new ValidationException("Insufficient balance");
             }
 
-            // Check if the daily limit is exceeded
+            // Check if the daily limit is exceeded using the configured limit
             var transactions = await _unitOfWork.TransactionRepository.GetTransactionsByAccountIdAsync(account.AccountId, DateTime.Now.Date);
             var dailyTotal = transactions.Where(t => t.IsATM).Sum(t => t.Amount);
-            if (dailyTotal + withdrawMoneyDto.Amount > 10000m)
+            if (dailyTotal + withdrawMoneyDto.Amount > _atmConstants.DailyWithdrawalLimit)
             {
                 _logger.LogWarning("Daily withdrawal limit exceeded for card {CardNumber}", cardNumber);
                 throw new ValidationException("Daily withdrawal limit exceeded");
