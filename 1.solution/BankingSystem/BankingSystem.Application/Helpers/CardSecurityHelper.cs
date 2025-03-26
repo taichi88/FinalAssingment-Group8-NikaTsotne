@@ -31,12 +31,7 @@ public static class CardSecurityHelper
         return key;
     }
 
-    // Generate a card number using Luhn algorithm
-    /// <summary>
-    /// Generates a valid card number that passes the Luhn check
-    /// </summary>
-    /// <param name="bin">Bank Identification Number (BIN) prefix, defaults to "4000" (Visa test cards)</param>
-    /// <returns>A valid 16-digit card number</returns>
+
 // Generate a random 16-digit credit card number that passes the Luhn algorithm.
     public static string GenerateCardNumber()
     {
@@ -76,33 +71,6 @@ public static class CardSecurityHelper
         return string.Join("", digits);
     }
 
-    // Luhn algorithm to validate a credit card number.
-    public static bool IsValidCreditCard(string cardNumber)
-    {
-        if (cardNumber.Length != 16 || !ulong.TryParse(cardNumber, out _))
-        {
-            return false;
-        }
-
-        int sum = 0;
-        bool alternate = false;
-        for (int i = cardNumber.Length - 1; i >= 0; i--)
-        {
-            int digit = int.Parse(cardNumber[i].ToString());
-            if (alternate)
-            {
-                digit *= 2;
-                if (digit > 9)
-                {
-                    digit -= 9;
-                }
-            }
-            sum += digit;
-            alternate = !alternate;
-        }
-        return (sum % 10 == 0);
-    }
-
     // Generate a random CVV number (3 digits)
     public static string GenerateCvv()
     {
@@ -117,7 +85,6 @@ public static class CardSecurityHelper
         return random.Next(1000, 10000).ToString();
     }
 
-    // Encrypt sensitive data
     // Encrypt sensitive data with a deterministic approach using a derived IV
     public static string Encrypt(string plainText)
     {
@@ -150,31 +117,6 @@ public static class CardSecurityHelper
         }
 
         return Convert.ToBase64String(ms.ToArray());
-    }
-
-
-    // Decrypt sensitive data
-    public static string Decrypt(string cipherText)
-    {
-        if (string.IsNullOrEmpty(cipherText))
-            return cipherText;
-
-        byte[] cipherBytes = Convert.FromBase64String(cipherText);
-
-        using var aes = Aes.Create();
-        aes.Key = Encoding.UTF8.GetBytes(EncryptionKey.PadRight(32, '0').Substring(0, 32));
-
-        // Extract IV from the beginning of the ciphertext
-        byte[] iv = new byte[16]; // AES block size is 16 bytes
-        Buffer.BlockCopy(cipherBytes, 0, iv, 0, iv.Length);
-        aes.IV = iv;
-
-        // Decrypt the actual ciphertext (after the IV)
-        using var ms = new MemoryStream();
-        using var decryptStream = new MemoryStream(cipherBytes, iv.Length, cipherBytes.Length - iv.Length);
-        using var cs = new CryptoStream(decryptStream, aes.CreateDecryptor(), CryptoStreamMode.Read);
-        using var sr = new StreamReader(cs);
-        return sr.ReadToEnd();
     }
 
     // Hash PIN code
