@@ -1,3 +1,4 @@
+using BankingSystem.Application.Constants;
 using BankingSystem.Application.IServices;
 using BankingSystem.Application.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,6 +18,10 @@ public static class ApplicationServiceRegistration
         services.AddScoped<IPersonService, PersonService>();
         services.AddScoped<IAtmTokenService, AtmTokenService>();
         services.AddScoped<IReportService, ReportService>();
+        
+        // Register configuration constants
+        services.AddSingleton<AtmConstants>();
+        services.AddSingleton<TransactionConstants>();
 
         return services;
     }

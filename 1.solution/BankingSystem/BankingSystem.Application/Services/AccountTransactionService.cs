@@ -1,4 +1,5 @@
-﻿using BankingSystem.Application.DTO;
+﻿using BankingSystem.Application.Constants;
+using BankingSystem.Application.DTO;
 using BankingSystem.Application.Exceptions;
 using BankingSystem.Domain.Entities;
 using BankingSystem.Application.IServices;
@@ -8,13 +9,27 @@ using BankingSystem.Domain.Enums;
 
 namespace BankingSystem.Application.Services;
 
-public class AccountTransactionService(IUnitOfWork unitOfWork, IExchangeRateApi exchangeRateApi) : IAccountTransactionService
+public class AccountTransactionService : IAccountTransactionService
 {
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly IExchangeRateApi _exchangeRateApi;
+    private readonly TransactionConstants _transactionConstants;
+
+    public AccountTransactionService(
+        IUnitOfWork unitOfWork, 
+        IExchangeRateApi exchangeRateApi,
+        TransactionConstants transactionConstants)
+    {
+        _unitOfWork = unitOfWork;
+        _exchangeRateApi = exchangeRateApi;
+        _transactionConstants = transactionConstants;
+    }
+
     public async Task<string> TransactionBetweenAccountsAsync(TransactionDto transactionDto, string userId)
     {
         try
         {
-            await unitOfWork.BeginTransactionAsync();
+            await _unitOfWork.BeginTransactionAsync();
 
             var fromAccount = await GetAccountSafelyAsync(transactionDto.FromAccountId, "Source");
             var toAccount = await GetAccountSafelyAsync(transactionDto.ToAccountId, "Destination");
@@ -42,7 +57,9 @@ public class AccountTransactionService(IUnitOfWork unitOfWork, IExchangeRateApi 
                     if (fromAccount.PersonId == toAccount.PersonId)
                         throw new ValidationException("Transfer to your own account is not allowed");
 
-                    var transactionFee = transaction.Amount * 0.01m + 0.5m;
+                    var transactionFee = transaction.Amount * _transactionConstants.TransferToOthersFeeRate + 
+                                        _transactionConstants.TransferToOthersBaseFee;
+                    
                     if ((transaction.Amount + transactionFee) > fromAccount.Balance)
                         throw new ValidationException("The transaction was failed. You don't have enough money");
 
@@ -70,28 +87,27 @@ public class AccountTransactionService(IUnitOfWork unitOfWork, IExchangeRateApi 
             }
 
             // Save changes
-            await unitOfWork.AccountRepository.UpdateAccountAsync(fromAccount);
-            await unitOfWork.AccountRepository.UpdateAccountAsync(toAccount);
-            await unitOfWork.TransactionRepository.AddAccountTransactionAsync(transaction);
+            await _unitOfWork.AccountRepository.UpdateAccountAsync(fromAccount);
+            await _unitOfWork.AccountRepository.UpdateAccountAsync(toAccount);
+            await _unitOfWork.TransactionRepository.AddAccountTransactionAsync(transaction);
 
             // Commit transaction
-            await unitOfWork.CommitAsync();
+            await _unitOfWork.CommitAsync();
             return "The transaction was completed successfully.";
         }
         catch (Exception)
         {
             // Single point of rollback
-            await unitOfWork.RollbackAsync();
+            await _unitOfWork.RollbackAsync();
             throw; // Re-throw to be handled by middleware
         }
     }
-
 
     private async Task<Account> GetAccountSafelyAsync(int accountId, string accountType)
     {
         try
         {
-            return await unitOfWork.AccountRepository.GetAccountByIdAsync(accountId);
+            return await _unitOfWork.AccountRepository.GetAccountByIdAsync(accountId);
         }
         catch (InvalidOperationException)
         {
@@ -105,21 +121,21 @@ public class AccountTransactionService(IUnitOfWork unitOfWork, IExchangeRateApi 
         if (fromCurrency == toCurrency)
             return amount;
 
-        // Base currency for the system is GEL
-        const string baseCurrency = "GEL";
+        // Use the configured base currency
+        string baseCurrency = _transactionConstants.BaseCurrency;
 
         // Get exchange rates using a thread-safe ConcurrentDictionary
         var rates = new System.Collections.Concurrent.ConcurrentDictionary<string, decimal>();
         
         if (fromCurrency != baseCurrency)
         {
-            var fromRate = await exchangeRateApi.GetExchangeRate(fromCurrency);
+            var fromRate = await _exchangeRateApi.GetExchangeRate(fromCurrency);
             rates.TryAdd(fromCurrency, fromRate);
         }
         
         if (toCurrency != baseCurrency)
         {
-            var toRate = await exchangeRateApi.GetExchangeRate(toCurrency);
+            var toRate = await _exchangeRateApi.GetExchangeRate(toCurrency);
             rates.TryAdd(toCurrency, toRate);
         }
 
@@ -135,6 +151,4 @@ public class AccountTransactionService(IUnitOfWork unitOfWork, IExchangeRateApi 
         // 3. Cross-currency conversion (through base currency)
         return amount * (rates[fromCurrency] / rates[toCurrency]);
     }
-
-
 }
