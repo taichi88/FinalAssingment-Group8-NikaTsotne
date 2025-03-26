@@ -68,7 +68,8 @@ builder.Services.AddAuthentication(options =>
             ValidateIssuer = true,
             ValidIssuer = jwtIssuer,
             ValidateAudience = false,
-            ValidateLifetime = true
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.FromMinutes(3)
         };
     });
 
