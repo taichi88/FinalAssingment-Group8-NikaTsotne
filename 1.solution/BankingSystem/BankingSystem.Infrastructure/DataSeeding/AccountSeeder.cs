@@ -1,5 +1,6 @@
 using BankingSystem.Application.Identity;
 using BankingSystem.Domain.Entities;
+using BankingSystem.Domain.Enums;
 using BankingSystem.Domain.IRepository;
 
 namespace BankingSystem.Infrastructure.DataSeeding;
@@ -16,12 +17,12 @@ public class AccountSeeder
     public async Task<List<Account>> SeedAccountsForUserAsync(IdentityPerson person, int accountCount)
     {
         var accounts = new List<Account>();
-        var currencies = new[] { "GEL", "USD", "EUR" };
+            var currencies = new[] { CurrencyType.GEL, CurrencyType.USD, CurrencyType.EUR };
 
         for (int i = 0; i < accountCount; i++)
         {
             // Ensure each person has one account in each currency
-            var currency = currencies[i % currencies.Length];
+            CurrencyType currency = currencies[i % currencies.Length];
 
             var account = new Account
             {

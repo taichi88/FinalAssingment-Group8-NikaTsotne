@@ -1,4 +1,5 @@
 ﻿using BankingSystem.Domain.CustomValidationAttributes;
+using BankingSystem.Domain.Enums;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Runtime.CompilerServices;
@@ -21,8 +22,7 @@ public class Account
     public decimal Balance { get; set; }
 
     [Required(ErrorMessage = "Currency is required.")]
-    [AllowedValues("GEL", "USD", "EUR", ErrorMessage = "Currency must be GEL, USD, or EUR.")]
-    public required string Currency { get; set; }
+    public required CurrencyType Currency { get; set; }
 
     [Required(ErrorMessage = "Person ID is required.")]
     public required string PersonId { get; set; }

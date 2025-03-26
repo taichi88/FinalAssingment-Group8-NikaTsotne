@@ -1,7 +1,7 @@
 CREATE TABLE Transactions(
 	Id INT PRIMARY KEY IDENTITY(1,1) NOT NULL,
 	Amount decimal(18,2) NOT NULL,
-	Currency NVARCHAR(3) NOT NULL,
+	Currency INT NOT NULL,
 	TransactionDate DATE NOT NULL,
 	FromAccountId INT NOT NULL,
 	ToAccountId INT NOT NULL,

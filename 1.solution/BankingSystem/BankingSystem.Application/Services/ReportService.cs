@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using BankingSystem.Application.DTO.Response.ReportResponses;
 using BankingSystem.Application.IServices;
+using BankingSystem.Domain.Enums;
 using BankingSystem.Domain.IRepository;
 using BankingSystem.Domain.IUnitOfWork;
 using Microsoft.Extensions.Logging;
@@ -156,17 +157,20 @@ namespace BankingSystem.Application.Services
             
             foreach (var (currency, amount) in currencyAmounts)
             {
-                switch (currency)
+                if (Enum.TryParse<CurrencyType>(currency, out var currencyType))
                 {
-                    case "GEL":
-                        result.GEL = amount;
-                        break;
-                    case "USD":
-                        result.USD = amount;
-                        break;
-                    case "EUR":
-                        result.EUR = amount;
-                        break;
+                    switch (currencyType)
+                    {
+                        case CurrencyType.GEL:
+                            result.GEL = amount;
+                            break;
+                        case CurrencyType.USD:
+                            result.USD = amount;
+                            break;
+                        case CurrencyType.EUR:
+                            result.EUR = amount;
+                            break;
+                    }
                 }
             }
             

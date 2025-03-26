@@ -115,7 +115,7 @@ public class AccountTransactionService : IAccountTransactionService
         }
     }
 
-    private async Task<decimal> ConvertCurrencyAsync(decimal amount, string fromCurrency, string toCurrency)
+    private async Task<decimal> ConvertCurrencyAsync(decimal amount, CurrencyType fromCurrency, CurrencyType toCurrency)
     {
         // No conversion needed if currencies are the same
         if (fromCurrency == toCurrency)
@@ -123,32 +123,34 @@ public class AccountTransactionService : IAccountTransactionService
 
         // Use the configured base currency
         string baseCurrency = _transactionConstants.BaseCurrency;
+        string fromCurrencyStr = fromCurrency.ToString();
+        string toCurrencyStr = toCurrency.ToString();
 
         // Get exchange rates using a thread-safe ConcurrentDictionary
         var rates = new System.Collections.Concurrent.ConcurrentDictionary<string, decimal>();
         
-        if (fromCurrency != baseCurrency)
+        if (fromCurrencyStr != baseCurrency)
         {
-            var fromRate = await _exchangeRateApi.GetExchangeRate(fromCurrency);
-            rates.TryAdd(fromCurrency, fromRate);
+            var fromRate = await _exchangeRateApi.GetExchangeRate(fromCurrencyStr);
+            rates.TryAdd(fromCurrencyStr, fromRate);
         }
         
-        if (toCurrency != baseCurrency)
+        if (toCurrencyStr != baseCurrency)
         {
-            var toRate = await _exchangeRateApi.GetExchangeRate(toCurrency);
-            rates.TryAdd(toCurrency, toRate);
+            var toRate = await _exchangeRateApi.GetExchangeRate(toCurrencyStr);
+            rates.TryAdd(toCurrencyStr, toRate);
         }
 
         // Conversion logic
         // 1. Converting from base currency to another
-        if (fromCurrency == baseCurrency)
-            return amount / rates[toCurrency];
+        if (fromCurrencyStr == baseCurrency)
+            return amount / rates[toCurrencyStr];
 
         // 2. Converting to base currency
-        if (toCurrency == baseCurrency)
-            return amount * rates[fromCurrency];
+        if (toCurrencyStr == baseCurrency)
+            return amount * rates[fromCurrencyStr];
 
         // 3. Cross-currency conversion (through base currency)
-        return amount * (rates[fromCurrency] / rates[toCurrency]);
+        return amount * (rates[fromCurrencyStr] / rates[toCurrencyStr]);
     }
 }

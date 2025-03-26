@@ -66,16 +66,16 @@ public class TransferTransactionSeeder
             // Simple conversion rates for demonstration - in real app this would come from exchange rate API
             var conversionRates = new Dictionary<string, decimal>
             {
-                { "USD", 2.5m }, // USD to GEL
-                { "EUR", 3.0m }, // EUR to GEL
-                { "GEL", 1.0m }  // GEL is base currency
+                { CurrencyType.USD.ToString(), 2.5m }, // USD to GEL
+                { CurrencyType.EUR.ToString(), 3.0m }, // EUR to GEL
+                { CurrencyType.GEL.ToString(), 1.0m }  // GEL is base currency
             };
 
             // Calculate converted amount using same logic as in AccountTransactionService
             decimal convertedAmount = _currencyConverter.ConvertCurrency(
                 transferAmount, 
-                fromAccount.Currency, 
-                toAccount.Currency, 
+                fromAccount.Currency.ToString(), 
+                toAccount.Currency.ToString(), 
                 conversionRates);
 
             var transaction = new Transaction

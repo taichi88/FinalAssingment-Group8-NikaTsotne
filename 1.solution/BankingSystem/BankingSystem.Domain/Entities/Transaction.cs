@@ -17,8 +17,7 @@ public class Transaction
     public decimal TransactionFee { get; set; }
 
     [Required(ErrorMessage = "Currency is required.")]
-    [RegularExpression(@"^[A-Z]{3}$", ErrorMessage = "Currency must be a 3-letter ISO code in uppercase.")]
-    public required string Currency { get; set; }
+    public required CurrencyType Currency { get; set; }
 
     [Required(ErrorMessage = "Transaction date is required.")]
     public DateTime TransactionDate { get; set; }

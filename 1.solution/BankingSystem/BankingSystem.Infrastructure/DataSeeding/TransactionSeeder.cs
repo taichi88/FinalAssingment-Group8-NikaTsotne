@@ -1,4 +1,5 @@
 using BankingSystem.Domain.Entities;
+using BankingSystem.Domain.Enums;
 using BankingSystem.Domain.IRepository;
 using BankingSystem.Infrastructure.DataSeeding.Transactions;
 
@@ -40,9 +41,9 @@ public class TransactionSeeder
         }
 
         // 3. Transfer to Others (Different Currency)
-        var fromAccountDiff = accounts.FirstOrDefault(a => a.Currency == "USD");
+        var fromAccountDiff = accounts.FirstOrDefault(a => a.Currency == CurrencyType.USD);
         var toAccountDiff = accounts.FirstOrDefault(a => 
-            a.Currency == "EUR" && 
+            a.Currency == CurrencyType.EUR && 
             a.PersonId != (fromAccountDiff?.PersonId ?? ""));
 
         if (fromAccountDiff != null && toAccountDiff != null)
