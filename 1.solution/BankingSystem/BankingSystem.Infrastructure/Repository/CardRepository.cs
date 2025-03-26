@@ -1,4 +1,5 @@
 ﻿using System.Data;
+using BankingSystem.Application.Helpers;
 using BankingSystem.Domain.Entities;
 using BankingSystem.Domain.IRepository;
 using Dapper;
@@ -14,48 +15,76 @@ public class CardRepository : ICardRepository
     {
         _connection = connection;
     }
+
     public void SetTransaction(IDbTransaction transaction)
     {
         _transaction = transaction;
     }
+
     public async Task CreateCardAsync(Card card)
     {
+        // Card is already encrypted/hashed by the service before reaching the repository
         const string query =
-            "INSERT INTO Cards(FirstName, Lastname, CardNumber, ExpirationDate, CVV, PinCode, AccountId) VALUES (@FirstName, @Lastname, @CardNumber, @ExpirationDate, @CVV, @PinCode, @AccountId)";
+            "INSERT INTO Cards(FirstName, Lastname, CardNumber, ExpirationDate, CVV, PinCode, AccountId) " +
+            "VALUES (@Firstname, @Lastname, @CardNumber, @ExpirationDate, @Cvv, @PinCode, @AccountId)";
 
         await _connection.ExecuteAsync(query, card, _transaction);
     }
 
     public async Task<Card?> GetCardByNumberAsync(string cardNumber)
     {
+        // Encrypt the card number for database lookup
+        string encryptedCardNumber = CardSecurityHelper.Encrypt(cardNumber);
+
         return await _connection.QuerySingleOrDefaultAsync<Card>(
-            "select * from Cards where cardNumber = @CardNumber", new
-            {
-                CardNumber = cardNumber
-            });
+            "SELECT * FROM Cards WHERE CardNumber = @CardNumber",
+            new { CardNumber = encryptedCardNumber },
+            _transaction);
     }
 
     public async Task UpdateCardAsync(Card card)
     {
+        // Card is already encrypted/hashed by the service before reaching the repository
         const string query =
-            "UPDATE Cards SET FirstName = @FirstName, Lastname = @Lastname, CardNumber = @CardNumber, ExpirationDate = @ExpirationDate, CVV = @CVV, PinCode = @PinCode, AccountId = @AccountId WHERE cardNumber = @CardNumber";
+            "UPDATE Cards SET Firstname = @Firstname, Lastname = @Lastname, ExpirationDate = @ExpirationDate, " +
+            "CVV = @Cvv, PinCode = @PinCode, AccountId = @AccountId WHERE CardNumber = @CardNumber";
+
         await _connection.ExecuteAsync(query, card, _transaction);
     }
 
-
     public async Task<Account?> GetAccountByCardNumberAsync(string cardNumber)
     {
-        const string query = @"SELECT a.Id AS AccountId, a.*
-                                FROM Accounts a
-                                INNER JOIN Cards c ON a.Id = c.AccountId
-                                WHERE c.CardNumber = @cardNumber";
+        // Encrypt the card number for database lookup
+        string encryptedCardNumber = CardSecurityHelper.Encrypt(cardNumber);
 
-        return await _connection.QuerySingleOrDefaultAsync<Account>(query, new { cardNumber }, _transaction);
+        const string query = @"SELECT a.Id AS AccountId, a.*
+                              FROM Accounts a
+                              INNER JOIN Cards c ON a.Id = c.AccountId
+                              WHERE c.CardNumber = @CardNumber";
+
+        return await _connection.QuerySingleOrDefaultAsync<Account>(
+            query,
+            new { CardNumber = encryptedCardNumber },
+            _transaction);
     }
 
     public async Task<bool> ValidateCardAsync(string cardNumber, string pinCode)
     {
-        var card = await GetCardByNumberAsync(cardNumber);
-        return card != null && pinCode == card.PinCode;
+        // Encrypt the card number for database lookup
+        string encryptedCardNumber = CardSecurityHelper.Encrypt(cardNumber);
+
+        // Get the card using the encrypted card number
+        var card = await _connection.QuerySingleOrDefaultAsync<Card>(
+            "SELECT * FROM Cards WHERE CardNumber = @CardNumber",
+            new { CardNumber = encryptedCardNumber },
+            _transaction);
+
+        if (card == null) return false;
+
+        // Hash the pin code for comparison
+        string hashedPinCode = CardSecurityHelper.HashPinCode(pinCode);
+
+        // Compare the hashed PIN with the stored hashed PIN
+        return hashedPinCode == card.PinCode;
     }
 }

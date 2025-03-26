@@ -1,9 +1,12 @@
-﻿using BankingSystem.Application.DTO;
+﻿// BankingSystem.Application/Services/CardService.cs
+using BankingSystem.Application.DTO;
+using BankingSystem.Application.Helpers;
 using BankingSystem.Application.IServices;
 using BankingSystem.Domain.Entities;
 using BankingSystem.Domain.IUnitOfWork;
 using BankingSystem.Application.Exceptions;
 using Microsoft.Extensions.Logging;
+using BankingSystem.Application.DTO.Response;
 
 namespace BankingSystem.Application.Services;
 
@@ -18,7 +21,7 @@ public class CardService : ICardService
         _logger = logger;
     }
 
-    public async Task<string> CreateCardAsync(CardRegisterDto cardRegisterDto)
+    public async Task<CardResponseDto> CreateCardAsync(CardRegisterDto cardRegisterDto)
     {
         try
         {
@@ -33,11 +36,29 @@ public class CardService : ICardService
                 throw new NotFoundException($"Account with ID {cardRegisterDto.AccountId} not found");
             }
 
+            // Generate or use provided card details
+            string cardNumber = cardRegisterDto.CardNumber ?? CardSecurityHelper.GenerateCardNumber();
+            string cvv = cardRegisterDto.Cvv ?? CardSecurityHelper.GenerateCvv();
+            string pinCode = cardRegisterDto.PinCode ?? CardSecurityHelper.GeneratePinCode();
+
+            // Prepare response with plaintext values before encryption
+            var response = new CardResponseDto
+            {
+                CardNumber = cardNumber,
+                Cvv = cvv,
+                PinCode = pinCode,
+                ExpirationDate = cardRegisterDto.ExpirationDate,
+                AccountId = cardRegisterDto.AccountId,
+                Firstname = cardRegisterDto.Firstname,
+                Lastname = cardRegisterDto.Lastname
+            };
+
+            // Create card entity with encrypted/hashed values
             var card = new Card
             {
-                CardNumber = cardRegisterDto.CardNumber,
-                Cvv = cardRegisterDto.Cvv,
-                PinCode = cardRegisterDto.PinCode,
+                CardNumber = CardSecurityHelper.Encrypt(cardNumber),
+                Cvv = CardSecurityHelper.Encrypt(cvv),
+                PinCode = CardSecurityHelper.HashPinCode(pinCode),
                 ExpirationDate = cardRegisterDto.ExpirationDate,
                 AccountId = cardRegisterDto.AccountId,
                 Firstname = cardRegisterDto.Firstname,
@@ -47,12 +68,11 @@ public class CardService : ICardService
             await _unitOfWork.CardRepository.CreateCardAsync(card);
             await _unitOfWork.CommitAsync();
 
-            _logger.LogInformation("Bank card {CardNumber} created successfully for account {AccountId}",
-                cardRegisterDto.CardNumber, cardRegisterDto.AccountId);
+            _logger.LogInformation("Bank card created successfully for account {AccountId}", cardRegisterDto.AccountId);
 
-            return "Card created successfully";
+            return response;
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             await _unitOfWork.RollbackAsync();
             throw; // Let middleware handle the exception

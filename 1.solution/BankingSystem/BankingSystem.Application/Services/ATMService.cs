@@ -1,5 +1,6 @@
 using BankingSystem.Application.DTO;
 using BankingSystem.Application.Exceptions;
+using BankingSystem.Application.Helpers;
 using BankingSystem.Application.IServices;
 using BankingSystem.Domain.Entities;
 using BankingSystem.Domain.Enums;
@@ -148,13 +149,16 @@ public class AtmService : IAtmService
                 throw new NotFoundException("Card not found");
             }
 
-            if (card.PinCode != changePinCodeDto.OldPinCode)
+            // Hash the old PIN code before comparing with the stored hash
+            string hashedOldPinCode = CardSecurityHelper.HashPinCode(changePinCodeDto.OldPinCode);
+            if (card.PinCode != hashedOldPinCode)
             {
                 _logger.LogWarning("Old PIN code is incorrect for card {CardNumber}", cardNumber);
                 throw new ValidationException("Old PIN code is incorrect");
             }
 
-            card.PinCode = changePinCodeDto.NewPinCode;
+            // Hash the new PIN code before storing it
+            card.PinCode = CardSecurityHelper.HashPinCode(changePinCodeDto.NewPinCode);
             await _unitOfWork.CardRepository.UpdateCardAsync(card);
             await _unitOfWork.CommitAsync();
 
@@ -166,4 +170,5 @@ public class AtmService : IAtmService
             throw; // Let middleware handle the exception
         }
     }
+
 }

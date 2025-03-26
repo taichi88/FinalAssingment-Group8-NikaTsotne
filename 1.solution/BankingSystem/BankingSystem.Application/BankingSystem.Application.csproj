@@ -18,8 +18,4 @@
 		<ProjectReference Include="..\BankingSystem.Domain\BankingSystem.Domain.csproj" />
 	</ItemGroup>
 
-	<ItemGroup>
-	  <Folder Include="Filters\" />
-	</ItemGroup>
-
 </Project>

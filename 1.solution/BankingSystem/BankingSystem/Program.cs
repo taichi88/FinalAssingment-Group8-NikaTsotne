@@ -16,6 +16,7 @@ using Serilog;
 using Serilog.Events;
 using BankingSystem.Infrastructure.Data;
 using BankingSystem.Infrastructure.DataSeeding;
+using BankingSystem.Application.Helpers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -93,7 +94,7 @@ if (app.Environment.IsDevelopment())
 
 // In Configure:
 app.UseSession();
-
+CardSecurityHelper.Initialize(app.Configuration);
 app.UseMiddleware<ErrorHandlingMiddleware>();
 
 app.UseSerilogRequestLogging();
