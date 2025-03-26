@@ -16,7 +16,7 @@ public class Card
     public string Lastname { get; set; }
 
     [Required(ErrorMessage = "Card number is required.")]
-    [CardNumberValidation(ErrorMessage = "Invalid card number format.")]
+    [LuhnCardNumberValidation(ErrorMessage = "Invalid card number format or checksum.")]
     public string CardNumber { get; set; }
 
     [Required(ErrorMessage = "Expiration date is required.")]
