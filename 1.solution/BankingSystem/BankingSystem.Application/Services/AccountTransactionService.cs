@@ -34,11 +34,9 @@ public class AccountTransactionService : IAccountTransactionService
             var fromAccount = await GetAccountSafelyAsync(transactionDto.FromAccountId, "Source");
             var toAccount = await GetAccountSafelyAsync(transactionDto.ToAccountId, "Destination");
 
-            // Authorization check
             if (fromAccount.PersonId != userId)
                 throw new UnauthorizedException("You are not authorized to perform this transaction");
 
-            // Create transaction
             var transaction = new Transaction
             {
                 FromAccountId = transactionDto.FromAccountId,
@@ -50,7 +48,6 @@ public class AccountTransactionService : IAccountTransactionService
                 TransactionType = Enum.Parse<TransactionType>(transactionDto.TransactionType)
             };
 
-            // Process based on transaction type
             switch (transaction.TransactionType)
             {
                 case TransactionType.TransferToOthers:
@@ -86,20 +83,17 @@ public class AccountTransactionService : IAccountTransactionService
                     throw new ValidationException("Invalid transaction type");
             }
 
-            // Save changes
             await _unitOfWork.AccountRepository.UpdateAccountAsync(fromAccount);
             await _unitOfWork.AccountRepository.UpdateAccountAsync(toAccount);
             await _unitOfWork.TransactionRepository.AddAccountTransactionAsync(transaction);
 
-            // Commit transaction
             await _unitOfWork.CommitAsync();
             return "The transaction was completed successfully.";
         }
         catch (Exception)
         {
-            // Single point of rollback
             await _unitOfWork.RollbackAsync();
-            throw; // Re-throw to be handled by middleware
+            throw;
         }
     }
 
@@ -117,16 +111,13 @@ public class AccountTransactionService : IAccountTransactionService
 
     private async Task<decimal> ConvertCurrencyAsync(decimal amount, CurrencyType fromCurrency, CurrencyType toCurrency)
     {
-        // No conversion needed if currencies are the same
         if (fromCurrency == toCurrency)
             return amount;
 
-        // Use the configured base currency
         string baseCurrency = _transactionConstants.BaseCurrency;
         string fromCurrencyStr = fromCurrency.ToString();
         string toCurrencyStr = toCurrency.ToString();
 
-        // Get exchange rates using a thread-safe ConcurrentDictionary
         var rates = new System.Collections.Concurrent.ConcurrentDictionary<string, decimal>();
         
         if (fromCurrencyStr != baseCurrency)
@@ -141,16 +132,12 @@ public class AccountTransactionService : IAccountTransactionService
             rates.TryAdd(toCurrencyStr, toRate);
         }
 
-        // Conversion logic
-        // 1. Converting from base currency to another
         if (fromCurrencyStr == baseCurrency)
             return amount / rates[toCurrencyStr];
 
-        // 2. Converting to base currency
         if (toCurrencyStr == baseCurrency)
             return amount * rates[fromCurrencyStr];
 
-        // 3. Cross-currency conversion (through base currency)
         return amount * (rates[fromCurrencyStr] / rates[toCurrencyStr]);
     }
 }
