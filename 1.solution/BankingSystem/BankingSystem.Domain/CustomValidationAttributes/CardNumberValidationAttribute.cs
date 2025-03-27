@@ -5,7 +5,7 @@ namespace BankingSystem.Domain.CustomValidationAttributes;
 
 public class CardNumberValidationAttribute : ValidationAttribute
 {
-    private const string CardNumberPattern = @"^\d{16}$"; // Example pattern for a 16-digit card number
+    private const string CardNumberPattern = @"^\d{16}$";
 
     protected override ValidationResult? IsValid(object? value, ValidationContext validationContext)
     {
