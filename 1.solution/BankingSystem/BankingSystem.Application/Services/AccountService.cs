@@ -20,39 +20,29 @@ public class AccountService : IAccountService
 
     public async Task<string> CreateAccountAsync(AccountRegisterDto accountRegisterDto)
     {
-        try
+        _logger.LogInformation("Creating bank account for user with ID number {IdNumber}", accountRegisterDto.IdNumber);
+
+        var personId = await _unitOfWork.PersonRepository.GetUserByIdNumberAsync(accountRegisterDto.IdNumber);
+
+        if (string.IsNullOrEmpty(personId))
         {
-            _logger.LogInformation("Creating bank account for user with ID number {IdNumber}", accountRegisterDto.IdNumber);
-            await _unitOfWork.BeginTransactionAsync();
-
-            var personId = await _unitOfWork.PersonRepository.GetUserByIdNumberAsync(accountRegisterDto.IdNumber);
-
-            if (string.IsNullOrEmpty(personId))
-            {
-                _logger.LogWarning("Failed to create account: Person with ID number {IdNumber} not found", accountRegisterDto.IdNumber);
-                throw new NotFoundException($"Person with ID number {accountRegisterDto.IdNumber} not found");
-            }
-
-            var account = new Account
-            {
-                IBAN = accountRegisterDto.Iban,
-                Balance = accountRegisterDto.Balance,
-                PersonId = personId,
-                Currency = accountRegisterDto.Currency
-            };
-
-            await _unitOfWork.AccountRepository.CreateAccountAsync(account);
-            await _unitOfWork.CommitAsync();
-
-            _logger.LogInformation("Bank account with IBAN {IBAN} created successfully for user {IdNumber}",
-                accountRegisterDto.Iban, accountRegisterDto.IdNumber);
-
-            return "Account created successfully";
+            _logger.LogWarning("Failed to create account: Person with ID number {IdNumber} not found", accountRegisterDto.IdNumber);
+            throw new NotFoundException($"Person with ID number {accountRegisterDto.IdNumber} not found");
         }
-        catch (Exception ex)
+
+        var account = new Account
         {
-            await _unitOfWork.RollbackAsync();
-            throw; // Let middleware handle the exception
-        }
+            IBAN = accountRegisterDto.Iban,
+            Balance = accountRegisterDto.Balance,
+            PersonId = personId,
+            Currency = accountRegisterDto.Currency
+        };
+
+        await _unitOfWork.AccountRepository.CreateAccountAsync(account);
+
+        _logger.LogInformation("Bank account with IBAN {IBAN} created successfully for user {IdNumber}",
+            accountRegisterDto.Iban, accountRegisterDto.IdNumber);
+
+        return "Account created successfully";
     }
 }
