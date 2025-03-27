@@ -7,5 +7,4 @@ public class AuthenticationResponse
     public string UserId { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public string Role { get; set; } =string.Empty;
-    public string? ErrorMessage { get; set; }
 }
