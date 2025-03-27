@@ -40,9 +40,7 @@ public class AtmTokenService : IAtmTokenService
                 new("atmSession", "true")
             };
 
-            // Short expiry for ATM operations
             var expiration = DateTime.UtcNow.AddMinutes(3);
-
             var tokenGenerator = new JwtSecurityToken(
                 _configuration["Jwt:Issuer"],
                 _configuration["Jwt:Audience"],
