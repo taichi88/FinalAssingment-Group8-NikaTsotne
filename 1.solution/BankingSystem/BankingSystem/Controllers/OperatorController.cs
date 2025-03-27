@@ -9,6 +9,7 @@ using System.Net;
 namespace BankingSystem.Controllers;
 [ValidateModel]
 [ApiController]
+[Authorize(Roles = "Operator")]
 [Route("api/[controller]")]
 public class OperatorController : ControllerBase
 {
@@ -22,30 +23,24 @@ public class OperatorController : ControllerBase
         _cardService = cardService;
     }
 
-    [Authorize(Roles = "Operator")]
-    [HttpPost("register-user")]
+    [HttpPost("users")]
     public async Task<IActionResult> RegisterUser(PersonRegisterDto registerModel)
     {
         var result = await _authService.RegisterPersonAsync(registerModel);
-        var response = ErrorHandlingMiddleware.CreateSuccessResponse(HttpStatusCode.OK, result);
-        return Ok(response);
+        return Ok(ErrorHandlingMiddleware.CreateSuccessResponse(HttpStatusCode.OK, result));
     }
 
-    [Authorize(Roles = "Operator")]
-    [HttpPost("create-bank-account")]
+    [HttpPost("accounts")]
     public async Task<IActionResult> CreateAccount(AccountRegisterDto accountRegisterDto)
     {
         var result = await _accountService.CreateAccountAsync(accountRegisterDto);
-        var response = ErrorHandlingMiddleware.CreateSuccessResponse(HttpStatusCode.OK, result);
-        return Ok(response);
+        return Ok(ErrorHandlingMiddleware.CreateSuccessResponse(HttpStatusCode.OK, result));
     }
 
-    [Authorize(Roles = "Operator")]
-    [HttpPost("create-bank-card")]
+    [HttpPost("cards")]
     public async Task<IActionResult> CreateCard(CardRegisterDto cardRegisterDto)
     {
         var result = await _cardService.CreateCardAsync(cardRegisterDto);
-        var response = ErrorHandlingMiddleware.CreateSuccessResponse(HttpStatusCode.OK, result);
-        return Ok(response);
+        return Ok(ErrorHandlingMiddleware.CreateSuccessResponse(HttpStatusCode.OK, result));
     }
 }
