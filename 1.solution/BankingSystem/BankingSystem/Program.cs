@@ -16,7 +16,6 @@ builder.Services.AddInfrastructureServices(builder.Configuration);
 builder.Services.AddApplicationServices();
 builder.Services.AddMemoryCache();
 
-// Configure Serilog
 builder.Host.UseSerilog((context, configuration) => configuration
     .ReadFrom.Configuration(context.Configuration)
     .Enrich.FromLogContext());
@@ -40,8 +39,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-
-// Initialize database using extension method from Infrastructure layer
 await app.Services.InitializeDatabaseAsync();
 
 app.Run();

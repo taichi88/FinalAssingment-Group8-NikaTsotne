@@ -84,23 +84,25 @@ public class PersonAuthService : IPersonAuthService
             throw new ValidationException($"User registration failed: {errors}");
         }
 
-        var role = string.IsNullOrEmpty(registerDto.Role) ? "User" : registerDto.Role;
-        if (!await _roleManager.RoleExistsAsync(role))
+        // Convert enum to string for role assignment
+        string roleName = registerDto.Role.ToString();
+        
+        if (!await _roleManager.RoleExistsAsync(roleName))
         {
-            _logger.LogError("Role does not exist: {Role}", role);
-            throw new ValidationException($"Invalid role: {role}");
+            _logger.LogError("Role does not exist: {Role}", roleName);
+            throw new ValidationException($"Invalid role: {roleName}");
         }
 
-        var roleResult = await _userManager.AddToRoleAsync(user, role);
+        var roleResult = await _userManager.AddToRoleAsync(user, roleName);
         if (!roleResult.Succeeded)
         {
-            _logger.LogError("Failed to assign role {Role} to user {Email}", role, registerDto.Email);
+            _logger.LogError("Failed to assign role {Role} to user {Email}", roleName, registerDto.Email);
             await _userManager.DeleteAsync(user); // Rollback user creation
             throw new ValidationException("Failed to assign role to user");
         }
 
-        _logger.LogInformation("User {Email} registered successfully with role {Role}", registerDto.Email, role);
-        return $"User {registerDto.Email} registered successfully with role {registerDto.Role}";
+        _logger.LogInformation("User {Email} registered successfully with role {Role}", registerDto.Email, roleName);
+        return $"User {registerDto.Email} registered successfully with role {roleName}";
     }
 
     public async Task<AuthenticationResponse> GenerateJwtToken(IdentityPerson user)

@@ -1,3 +1,4 @@
+using BankingSystem.Domain.Enums;
 using Microsoft.AspNetCore.Identity;
 
 namespace BankingSystem.Infrastructure.DataSeeding;
@@ -13,7 +14,8 @@ public class RoleSeeder
 
     public async Task SeedRolesAsync()
     {
-        var roles = new[] { "Operator", "Person", "Manager" };
+        // Get all enum values and convert to string representations
+        var roles = Enum.GetValues<RoleType>().Select(r => r.ToString());
 
         foreach (var role in roles)
         {

@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using BankingSystem.Domain.CustomValidationAttributes;
+using BankingSystem.Domain.Enums;
 
 namespace BankingSystem.Application.DTO;
 
@@ -28,6 +29,6 @@ public class PersonRegisterDto
     public required string Password { get; set; }
 
     [Required(ErrorMessage = "Role is required.")]
-    [AllowedValues("Operator", "Person", "Manager", ErrorMessage = "Role must be either 'Operator' 'Person' or 'Manager'.")]
-    public required string Role { get; set; }
+    [EnumDataType(typeof(RoleType), ErrorMessage = "Invalid role type. Use 'Operator', 'Person' or 'Manager'.")]
+    public required RoleType Role { get; set; }
 }
