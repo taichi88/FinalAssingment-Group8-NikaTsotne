@@ -1,4 +1,5 @@
 ﻿using System.Data;
+using System.Threading;
 using BankingSystem.Domain.IRepository;
 using BankingSystem.Domain.IUnitOfWork;
 
@@ -14,63 +15,65 @@ public class UnitOfWork : IUnitOfWork
     public IAccountTransactionRepository TransactionRepository { get; }
     public ICardRepository CardRepository { get; }
     public IAccountRepository AccountRepository { get; }
-    public IReportRepository ReportRepository { get; } // Added IReportRepository property
+    public IReportRepository ReportRepository { get; }
 
     public UnitOfWork(IDbConnection connection, IPersonRepository personRepository,
         IAccountTransactionRepository transactionRepository, ICardRepository cardRepository,
-        IAccountRepository accountRepository, IReportRepository reportRepository) // Added reportRepository parameter
+        IAccountRepository accountRepository, IReportRepository reportRepository)
     {
         _connection = connection ?? throw new ArgumentNullException(nameof(connection));
         PersonRepository = personRepository ?? throw new ArgumentNullException(nameof(personRepository));
         TransactionRepository = transactionRepository ?? throw new ArgumentNullException(nameof(transactionRepository));
-        CardRepository = cardRepository ?? throw new ArgumentNullException(nameof(CardRepository));
+        CardRepository = cardRepository ?? throw new ArgumentNullException(nameof(cardRepository));
         AccountRepository = accountRepository ?? throw new ArgumentNullException(nameof(accountRepository));
-        ReportRepository = reportRepository ?? throw new ArgumentNullException(nameof(reportRepository)); // Added assignment
-        _connection.Open();
+        ReportRepository = reportRepository ?? throw new ArgumentNullException(nameof(reportRepository));
+        try
+        {
+            _connection.Open();
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException("Failed to open database connection", ex);
+        }
+
     }
 
-    public Task BeginTransactionAsync()
+    public async Task BeginTransactionAsync()
     {
         if (_transaction == null)
         {
-            _transaction = _connection.BeginTransaction();
+            _transaction = await Task.Run(() => _connection.BeginTransaction());
             PersonRepository.SetTransaction(_transaction);
             TransactionRepository.SetTransaction(_transaction);
             CardRepository.SetTransaction(_transaction);
             AccountRepository.SetTransaction(_transaction);
-            ReportRepository.SetTransaction(_transaction); // Added SetTransaction
+            ReportRepository.SetTransaction(_transaction);
         }
 
-        return Task.CompletedTask;
     }
 
-    public Task CommitAsync()
+    public async Task CommitAsync()
     {
         if (_transaction != null)
         {
-            _transaction.Commit();
-            return DisposeTransactionAsync();
+            await Task.Run(() => _transaction.Commit());
+            await DisposeTransactionAsync();
         }
-
-        return Task.CompletedTask;
     }
 
-    public Task RollbackAsync()
+    public async Task RollbackAsync()
     {
         if (_transaction != null)
         {
-            _transaction.Rollback();
-            return DisposeTransactionAsync();
+            await Task.Run(() => _transaction.Rollback());
+            await DisposeTransactionAsync();
         }
-
-        return Task.CompletedTask;
     }
 
-    private Task DisposeTransactionAsync()
+    private async Task DisposeTransactionAsync()
     {
-        _transaction?.Dispose();
+        await Task.Run(() => _transaction?.Dispose());
         _transaction = null;
-        return Task.CompletedTask;
     }
 
     public async ValueTask DisposeAsync()

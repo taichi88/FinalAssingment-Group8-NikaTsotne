@@ -9,7 +9,7 @@ namespace BankingSystem.Domain.IUnitOfWork
         public IAccountTransactionRepository TransactionRepository { get; }
         public ICardRepository CardRepository { get; }
         public IAccountRepository AccountRepository { get; }
-        public IReportRepository ReportRepository { get; } // Added IReportRepository
+        public IReportRepository ReportRepository { get; }
         Task BeginTransactionAsync();
         Task CommitAsync();
         Task RollbackAsync();

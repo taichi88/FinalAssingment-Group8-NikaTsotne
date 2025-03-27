@@ -30,11 +30,9 @@ if (app.Environment.IsDevelopment())
 
 CardSecurityHelper.Initialize(app.Configuration);
 app.UseMiddleware<ErrorHandlingMiddleware>();
-
 app.UseSerilogRequestLogging();
 
 app.UseHttpsRedirection();
-
 app.UseAuthentication();
 app.UseAuthorization();
 
