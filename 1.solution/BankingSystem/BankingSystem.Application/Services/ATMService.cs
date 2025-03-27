@@ -26,8 +26,6 @@ public class AtmService : IAtmService
     public async Task<string> AuthorizeCardAsync(CardAuthorizationDto cardAuthorizationDto)
     {
         _logger.LogInformation("Authorizing card {CardNumber}", cardAuthorizationDto.CardNumber);
-
-        // First validate credentials using the repository method
         var isValidCredentials = await _unitOfWork.CardRepository.ValidateCardAsync(
             cardAuthorizationDto.CardNumber,
             cardAuthorizationDto.PinCode);
@@ -38,17 +36,14 @@ public class AtmService : IAtmService
             throw new ValidationException("Card number or pin code is invalid.");
         }
 
-        // Then get the card to check expiration
         var card = await _unitOfWork.CardRepository.GetCardByNumberAsync(cardAuthorizationDto.CardNumber);
 
-        // This check is mostly a safeguard as ValidateCardAsync should have confirmed the card exists
         if (card == null)
         {
             _logger.LogWarning("Card not found after validation {CardNumber}", cardAuthorizationDto.CardNumber);
             throw new NotFoundException("Card not found");
         }
 
-        // Check if the card has expired
         if (card.ExpirationDate < DateTime.Now.Date)
         {
             _logger.LogWarning("Authorization failed for card {CardNumber}: card expired on {ExpirationDate}",
@@ -88,18 +83,15 @@ public class AtmService : IAtmService
                 throw new NotFoundException("Card not found");
             }
 
-            // Calculate the total amount including the fee using the configured fee rate
             var fee = withdrawMoneyDto.Amount * _atmConstants.FeeRate;
             var totalAmount = withdrawMoneyDto.Amount + fee;
 
-            // Check if the total amount exceeds the account balance
             if (totalAmount > account.Balance)
             {
                 _logger.LogWarning("Insufficient balance for card {CardNumber}", cardNumber);
                 throw new ValidationException("Insufficient balance");
             }
 
-            // Check if the daily limit is exceeded using the configured limit
             var transactions = await _unitOfWork.TransactionRepository.GetTransactionsByAccountIdAsync(account.AccountId, DateTime.Now.Date);
             var dailyTotal = transactions.Where(t => t.IsATM).Sum(t => t.Amount);
             if (dailyTotal + withdrawMoneyDto.Amount > _atmConstants.DailyWithdrawalLimit)
@@ -108,15 +100,13 @@ public class AtmService : IAtmService
                 throw new ValidationException("Daily withdrawal limit exceeded");
             }
 
-            // Update the account balance
             account.Balance -= totalAmount;
             await _unitOfWork.AccountRepository.UpdateAccountAsync(account);
 
-            // Create the transaction
             var transaction = new Transaction
             {
                 FromAccountId = account.AccountId,
-                ToAccountId = account.AccountId, // For ATM withdrawal, from and to account are the same
+                ToAccountId = account.AccountId,
                 Currency = account.Currency,
                 Amount = withdrawMoneyDto.Amount,
                 TransactionFee = fee,
@@ -133,45 +123,31 @@ public class AtmService : IAtmService
         catch (Exception)
         {
             await _unitOfWork.RollbackAsync();
-            throw; // Let middleware handle the exception
+            throw;
         }
     }
 
 
     public async Task<string> ChangePinCodeAsync(string cardNumber, ChangePinCodeDto changePinCodeDto)
     {
-        try
+        _logger.LogInformation("Changing PIN code for card {CardNumber}", cardNumber);
+        var card = await _unitOfWork.CardRepository.GetCardByNumberAsync(cardNumber);
+        if (card == null)
         {
-            _logger.LogInformation("Changing PIN code for card {CardNumber}", cardNumber);
-            await _unitOfWork.BeginTransactionAsync();
-
-            var card = await _unitOfWork.CardRepository.GetCardByNumberAsync(cardNumber);
-            if (card == null)
-            {
-                _logger.LogWarning("Card not found {CardNumber}", cardNumber);
-                throw new NotFoundException("Card not found");
-            }
-
-            // Hash the old PIN code before comparing with the stored hash
-            string hashedOldPinCode = CardSecurityHelper.HashPinCode(changePinCodeDto.OldPinCode);
-            if (card.PinCode != hashedOldPinCode)
-            {
-                _logger.LogWarning("Old PIN code is incorrect for card {CardNumber}", cardNumber);
-                throw new ValidationException("Old PIN code is incorrect");
-            }
-
-            // Hash the new PIN code before storing it
-            card.PinCode = CardSecurityHelper.HashPinCode(changePinCodeDto.NewPinCode);
-            await _unitOfWork.CardRepository.UpdateCardAsync(card);
-            await _unitOfWork.CommitAsync();
-
-            return "PIN code changed successfully";
+            _logger.LogWarning("Card not found {CardNumber}", cardNumber);
+            throw new NotFoundException("Card not found");
         }
-        catch (Exception)
+
+        string hashedOldPinCode = CardSecurityHelper.HashPinCode(changePinCodeDto.OldPinCode);
+        if (card.PinCode != hashedOldPinCode)
         {
-            await _unitOfWork.RollbackAsync();
-            throw; // Let middleware handle the exception
+            _logger.LogWarning("Old PIN code is incorrect for card {CardNumber}", cardNumber);
+            throw new ValidationException("Old PIN code is incorrect");
         }
+
+        card.PinCode = CardSecurityHelper.HashPinCode(changePinCodeDto.NewPinCode);
+        await _unitOfWork.CardRepository.UpdateCardAsync(card);
+        return "PIN code changed successfully";
     }
 
 }
