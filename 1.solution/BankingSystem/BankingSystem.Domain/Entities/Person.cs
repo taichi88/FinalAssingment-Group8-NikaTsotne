@@ -27,6 +27,7 @@ public class Person
     public required string Email { get; set; }
     [Required(ErrorMessage = "Registration date is required")]
     public DateOnly RegistrationDate { get; set; }
-    public IList<Account> Accounts { get; set; }
-    public IList<Card> Cards { get; set; }
+
+    public IList<Account> Accounts { get; set; } = new List<Account>();
+    public IList<Card> Cards { get; set; } = new List<Card>();
 }
