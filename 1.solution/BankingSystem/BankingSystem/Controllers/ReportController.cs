@@ -1,5 +1,4 @@
-﻿using BankingSystem.Application.DTO.Response;
-using BankingSystem.Application.IServices;
+﻿using BankingSystem.Application.IServices;
 using BankingSystem.Filters;
 using BankingSystem.Middleware;
 using Microsoft.AspNetCore.Authorization;
@@ -10,52 +9,42 @@ namespace BankingSystem.Controllers
 {
     [ValidateModel]
     [ApiController]
+    [Authorize(Roles = "Manager")]
     [Route("api/[controller]")]
     public class ReportController : ControllerBase
     {
         private readonly IReportService _reportService;
-        private readonly ILogger<ReportController> _logger;
-
         public ReportController(IReportService reportService, ILogger<ReportController> logger)
         {
             _reportService = reportService;
-            _logger = logger;
         }
 
-        [Authorize(Roles = "Manager")]
-        [HttpGet("user-statistics")]
+        [HttpGet("users")]
         public async Task<IActionResult> GetUserStatistics()
         {
             var result = await _reportService.GetUserStatisticsAsync();
-            var response = ErrorHandlingMiddleware.CreateSuccessResponse(HttpStatusCode.OK, result);
-            return Ok(response);
+            return Ok(ErrorHandlingMiddleware.CreateSuccessResponse(HttpStatusCode.OK, result));
         }
 
-        //[Authorize(Roles = "Manager")]
-        [HttpGet("transaction-statistics")]
+        [HttpGet("transactions")]
         public async Task<IActionResult> GetTransactionStatistics()
         {
             var result = await _reportService.GetTransactionStatisticsAsync();
-            var response = ErrorHandlingMiddleware.CreateSuccessResponse(HttpStatusCode.OK, result);
-            return Ok(response);
+            return Ok(ErrorHandlingMiddleware.CreateSuccessResponse(HttpStatusCode.OK, result));
         }
 
-        //[Authorize(Roles = "Manager")]
-        [HttpGet("monthly-transaction-breakdown")]
+        [HttpGet("transactions/monthly")]
         public async Task<IActionResult> GetMonthlyTransactionBreakdown()
         {
             var result = await _reportService.GetMonthlyTransactionBreakdownAsync();
-            var response = ErrorHandlingMiddleware.CreateSuccessResponse(HttpStatusCode.OK, result);
-            return Ok(response);
+            return Ok(ErrorHandlingMiddleware.CreateSuccessResponse(HttpStatusCode.OK, result));
         }
 
-        //[Authorize(Roles = "Manager")]
-        [HttpGet("atm-withdrawal-statistics")]
+        [HttpGet("atm-withdrawals")]
         public async Task<IActionResult> GetAtmWithdrawalStatistics()
         {
             var result = await _reportService.GetAtmWithdrawalStatisticsAsync();
-            var response = ErrorHandlingMiddleware.CreateSuccessResponse(HttpStatusCode.OK, result);
-            return Ok(response);
+            return Ok(ErrorHandlingMiddleware.CreateSuccessResponse(HttpStatusCode.OK, result));
         }
     }
 }
