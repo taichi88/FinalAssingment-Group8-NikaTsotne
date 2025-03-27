@@ -48,11 +48,6 @@ public class AtmController : ControllerBase
     public async Task<IActionResult> ViewBalance()
     {
         var cardNumber = User.FindFirst("cardNumber")?.Value;
-        if (string.IsNullOrEmpty(cardNumber))
-        {
-            return Unauthorized();
-        }
-
         var result = await _atmService.ViewBalanceAsync(cardNumber);
 
         var response = ErrorHandlingMiddleware.CreateSuccessResponse(HttpStatusCode.OK, result);
@@ -65,11 +60,6 @@ public class AtmController : ControllerBase
     public async Task<IActionResult> WithdrawMoney(WithdrawMoneyDto withdrawMoneyDto)
     {
         var cardNumber = User.FindFirst("cardNumber")?.Value;
-        if (string.IsNullOrEmpty(cardNumber))
-        {
-            return Unauthorized();
-        }
-
         var result = await _atmService.WithdrawMoneyAsync(cardNumber, withdrawMoneyDto);
 
         var response = ErrorHandlingMiddleware.CreateSuccessResponse(HttpStatusCode.OK, result);
@@ -82,11 +72,6 @@ public class AtmController : ControllerBase
     public async Task<IActionResult> ChangePinCode(ChangePinCodeDto changePinCodeDto)
     {
         var cardNumber = User.FindFirst("cardNumber")?.Value;
-        if (string.IsNullOrEmpty(cardNumber))
-        {
-            return Unauthorized();
-        }
-
         var result = await _atmService.ChangePinCodeAsync(cardNumber, changePinCodeDto);
 
         var response = ErrorHandlingMiddleware.CreateSuccessResponse(HttpStatusCode.OK, result);
