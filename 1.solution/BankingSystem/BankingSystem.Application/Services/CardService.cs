@@ -23,59 +23,45 @@ public class CardService : ICardService
 
     public async Task<CardResponseDto> CreateCardAsync(CardRegisterDto cardRegisterDto)
     {
-        try
+        _logger.LogInformation("Creating bank card for account ID {AccountId}", cardRegisterDto.AccountId);
+
+        var account = await _unitOfWork.AccountRepository.GetAccountByIdAsync(cardRegisterDto.AccountId);
+        if (account == null)
         {
-            _logger.LogInformation("Creating bank card for account ID {AccountId}", cardRegisterDto.AccountId);
-            await _unitOfWork.BeginTransactionAsync();
-
-            // Check if the account exists
-            var account = await _unitOfWork.AccountRepository.GetAccountByIdAsync(cardRegisterDto.AccountId);
-            if (account == null)
-            {
-                _logger.LogWarning("Failed to create card: Account with ID {AccountId} not found", cardRegisterDto.AccountId);
-                throw new NotFoundException($"Account with ID {cardRegisterDto.AccountId} not found");
-            }
-
-            // Generate or use provided card details
-            string cardNumber = cardRegisterDto.CardNumber ?? CardSecurityHelper.GenerateCardNumber();
-            string cvv = cardRegisterDto.Cvv ?? CardSecurityHelper.GenerateCvv();
-            string pinCode = cardRegisterDto.PinCode ?? CardSecurityHelper.GeneratePinCode();
-
-            // Prepare response with plaintext values before encryption
-            var response = new CardResponseDto
-            {
-                CardNumber = cardNumber,
-                Cvv = cvv,
-                PinCode = pinCode,
-                ExpirationDate = cardRegisterDto.ExpirationDate,
-                AccountId = cardRegisterDto.AccountId,
-                Firstname = cardRegisterDto.Firstname,
-                Lastname = cardRegisterDto.Lastname
-            };
-
-            // Create card entity with encrypted/hashed values
-            var card = new Card
-            {
-                CardNumber = CardSecurityHelper.Encrypt(cardNumber),
-                Cvv = CardSecurityHelper.Encrypt(cvv),
-                PinCode = CardSecurityHelper.HashPinCode(pinCode),
-                ExpirationDate = cardRegisterDto.ExpirationDate,
-                AccountId = cardRegisterDto.AccountId,
-                Firstname = cardRegisterDto.Firstname,
-                Lastname = cardRegisterDto.Lastname
-            };
-
-            await _unitOfWork.CardRepository.CreateCardAsync(card);
-            await _unitOfWork.CommitAsync();
-
-            _logger.LogInformation("Bank card created successfully for account {AccountId}", cardRegisterDto.AccountId);
-
-            return response;
+            _logger.LogWarning("Failed to create card: Account with ID {AccountId} not found", cardRegisterDto.AccountId);
+            throw new NotFoundException($"Account with ID {cardRegisterDto.AccountId} not found");
         }
-        catch (Exception)
+
+        string cardNumber = cardRegisterDto.CardNumber ?? CardSecurityHelper.GenerateCardNumber();
+        string cvv = cardRegisterDto.Cvv ?? CardSecurityHelper.GenerateCvv();
+        string pinCode = cardRegisterDto.PinCode ?? CardSecurityHelper.GeneratePinCode();
+
+        var response = new CardResponseDto
         {
-            await _unitOfWork.RollbackAsync();
-            throw; // Let middleware handle the exception
-        }
+            CardNumber = cardNumber,
+            Cvv = cvv,
+            PinCode = pinCode,
+            ExpirationDate = cardRegisterDto.ExpirationDate,
+            AccountId = cardRegisterDto.AccountId,
+            Firstname = cardRegisterDto.Firstname,
+            Lastname = cardRegisterDto.Lastname
+        };
+
+        var card = new Card
+        {
+            CardNumber = CardSecurityHelper.Encrypt(cardNumber),
+            Cvv = CardSecurityHelper.Encrypt(cvv),
+            PinCode = CardSecurityHelper.HashPinCode(pinCode),
+            ExpirationDate = cardRegisterDto.ExpirationDate,
+            AccountId = cardRegisterDto.AccountId,
+            Firstname = cardRegisterDto.Firstname,
+            Lastname = cardRegisterDto.Lastname
+        };
+
+        await _unitOfWork.CardRepository.CreateCardAsync(card);
+
+        _logger.LogInformation("Bank card created successfully for account {AccountId}", cardRegisterDto.AccountId);
+
+        return response;
     }
 }
