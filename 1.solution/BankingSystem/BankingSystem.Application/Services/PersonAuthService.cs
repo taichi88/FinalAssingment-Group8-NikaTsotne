@@ -84,7 +84,6 @@ public class PersonAuthService : IPersonAuthService
             throw new ValidationException($"User registration failed: {errors}");
         }
 
-        // Convert enum to string for role assignment
         string roleName = registerDto.Role.ToString();
         
         if (!await _roleManager.RoleExistsAsync(roleName))
@@ -97,7 +96,7 @@ public class PersonAuthService : IPersonAuthService
         if (!roleResult.Succeeded)
         {
             _logger.LogError("Failed to assign role {Role} to user {Email}", roleName, registerDto.Email);
-            await _userManager.DeleteAsync(user); // Rollback user creation
+            await _userManager.DeleteAsync(user);
             throw new ValidationException("Failed to assign role to user");
         }
 
@@ -109,51 +108,43 @@ public class PersonAuthService : IPersonAuthService
     {
         _logger.LogInformation("Generating JWT token for user {Email}", user.Email);
 
-        try
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]
+            ?? throw new ValidationException("JWT key is not configured")));
+
+        var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+        var roles = await _userManager.GetRolesAsync(user);
+        var roleClaims = roles.Select(role => new Claim(ClaimTypes.Role, role)).ToList();
+
+        var claims = new List<Claim>
         {
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]
-                ?? throw new ValidationException("JWT key is not configured")));
+            new(JwtRegisteredClaimNames.Sub, user.Email!),
+            new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            new("userId", user.Id)
+        };
 
-            var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-            var roles = await _userManager.GetRolesAsync(user);
-            var roleClaims = roles.Select(role => new Claim(ClaimTypes.Role, role)).ToList();
+        claims.AddRange(roleClaims);
+        var expiration = DateTime.UtcNow.AddMinutes(30);
 
-            var claims = new List<Claim>
-            {
-                new(JwtRegisteredClaimNames.Sub, user.Email!),
-                new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new("userId", user.Id)
-            };
+        var tokenGenerator = new JwtSecurityToken(
+            _configuration["Jwt:Issuer"],
+            _configuration["Jwt:Audience"],
+            claims,
+            expires: expiration,
+            signingCredentials: credentials
+        );
 
-            claims.AddRange(roleClaims);
-            var expiration = DateTime.UtcNow.AddMinutes(30);
+        var tokenHandler = new JwtSecurityTokenHandler();
+        var token = tokenHandler.WriteToken(tokenGenerator);
 
-            var tokenGenerator = new JwtSecurityToken(
-                _configuration["Jwt:Issuer"],
-                _configuration["Jwt:Audience"],
-                claims,
-                expires: expiration,
-                signingCredentials: credentials
-            );
+        _logger.LogInformation("JWT token generated successfully for user {Email}", user.Email);
 
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var token = tokenHandler.WriteToken(tokenGenerator);
-
-            _logger.LogInformation("JWT token generated successfully for user {Email}", user.Email);
-
-            return new AuthenticationResponse
-            {
-                Token = token,
-                Email = user.Email,
-                UserId = user.Id,
-                Expiration = expiration,
-                Role = string.Join(",", roles)
-            };
-        }
-        catch (Exception ex)
+        return new AuthenticationResponse
         {
-            _logger.LogError(ex, "Failed to generate JWT token for user {Email}", user.Email);
-            throw new ValidationException("Failed to generate authentication token");
-        }
+            Token = token,
+            Email = user.Email,
+            UserId = user.Id,
+            Expiration = expiration,
+            Role = string.Join(",", roles)
+        };
     }
 }
