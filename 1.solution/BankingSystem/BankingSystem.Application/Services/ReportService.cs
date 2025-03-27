@@ -27,16 +27,11 @@ namespace BankingSystem.Application.Services
             try
             {
                 _logger.LogInformation("Retrieving user statistics");
-                await _unitOfWork.BeginTransactionAsync();
-                
-                // Get user statistics from repository
+
                 var thisYearCount = await _unitOfWork.ReportRepository.GetUserCountThisYearAsync();
                 var lastYearCount = await _unitOfWork.ReportRepository.GetUserCountLastYearAsync();
                 var last30DaysCount = await _unitOfWork.ReportRepository.GetUserCountLast30DaysAsync();
                 
-                await _unitOfWork.CommitAsync();
-                
-                // Map to response DTO
                 return new UserStatisticsResponse
                 {
                     ThisYear = thisYearCount,
@@ -47,7 +42,6 @@ namespace BankingSystem.Application.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving user statistics");
-                await _unitOfWork.RollbackAsync();
                 throw;
             }
         }
@@ -57,14 +51,11 @@ namespace BankingSystem.Application.Services
             try
             {
                 _logger.LogInformation("Retrieving transaction statistics");
-                await _unitOfWork.BeginTransactionAsync();
                 
-                // Get transaction counts
                 var last1MonthCount = await _unitOfWork.ReportRepository.GetTransactionCountLastMonthAsync();
                 var last6MonthsCount = await _unitOfWork.ReportRepository.GetTransactionCountLast6MonthsAsync();
                 var last1YearCount = await _unitOfWork.ReportRepository.GetTransactionCountLastYearAsync();
                 
-                // Get transaction income by currency
                 var last1MonthIncome = await _unitOfWork.ReportRepository.GetTransactionIncomeLastMonthAsync();
                 var last6MonthsIncome = await _unitOfWork.ReportRepository.GetTransactionIncomeLast6MonthsAsync();
                 var last1YearIncome = await _unitOfWork.ReportRepository.GetTransactionIncomeLastYearAsync();
@@ -72,7 +63,6 @@ namespace BankingSystem.Application.Services
                 
                 await _unitOfWork.CommitAsync();
                 
-                // Map results to response DTO
                 return new TransactionStatisticsResponse
                 {
                     Last1MonthCount = last1MonthCount,
@@ -87,7 +77,6 @@ namespace BankingSystem.Application.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving transaction statistics");
-                await _unitOfWork.RollbackAsync();
                 throw;
             }
         }
@@ -97,14 +86,11 @@ namespace BankingSystem.Application.Services
             try
             {
                 _logger.LogInformation("Retrieving monthly transaction breakdown");
-                await _unitOfWork.BeginTransactionAsync();
                 
-                // Get daily transactions
                 var transactionsByDay = await _unitOfWork.ReportRepository.GetTransactionsByDayLastMonthAsync();
                 
                 await _unitOfWork.CommitAsync();
                 
-                // Map to response DTO
                 var response = new MonthlyTransactionBreakdownResponse
                 {
                     TransactionsByDay = transactionsByDay.Select(t => new DailyTransactionCount
@@ -119,7 +105,6 @@ namespace BankingSystem.Application.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving monthly transaction breakdown");
-                await _unitOfWork.RollbackAsync();
                 throw;
             }
         }
@@ -129,14 +114,9 @@ namespace BankingSystem.Application.Services
             try
             {
                 _logger.LogInformation("Retrieving ATM withdrawal statistics");
-                await _unitOfWork.BeginTransactionAsync();
-                
-                // Get total withdrawal amount
+
                 var totalWithdrawalAmount = await _unitOfWork.ReportRepository.GetTotalAtmWithdrawalAmountAsync();
                 
-                await _unitOfWork.CommitAsync();
-                
-                // Map to response DTO
                 return new AtmWithdrawalStatisticsResponse
                 {
                     TotalWithdrawalAmount = totalWithdrawalAmount
@@ -145,12 +125,10 @@ namespace BankingSystem.Application.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving ATM withdrawal statistics");
-                await _unitOfWork.RollbackAsync();
                 throw;
             }
         }
 
-        // Helper method to map currency tuples to CurrencyAmount DTO
         private CurrencyAmount MapToCurrencyAmount(IEnumerable<(string Currency, decimal Amount)> currencyAmounts)
         {
             var result = new CurrencyAmount();
@@ -161,19 +139,12 @@ namespace BankingSystem.Application.Services
                 {
                     switch (currencyType)
                     {
-                        case CurrencyType.GEL:
-                            result.GEL = amount;
-                            break;
-                        case CurrencyType.USD:
-                            result.USD = amount;
-                            break;
-                        case CurrencyType.EUR:
-                            result.EUR = amount;
-                            break;
+                        case CurrencyType.GEL: result.GEL = amount; break;
+                        case CurrencyType.USD: result.USD = amount; break;
+                        case CurrencyType.EUR: result.EUR = amount; break;
                     }
                 }
             }
-            
             return result;
         }
     }
