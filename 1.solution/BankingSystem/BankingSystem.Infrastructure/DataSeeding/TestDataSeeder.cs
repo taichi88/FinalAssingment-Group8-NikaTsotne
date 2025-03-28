@@ -66,17 +66,14 @@ public class TestDataSeeder
 
     public async Task SeedInitialDataAsync()
     {
-        // Create role seeder
         var roleSeeder = new RoleSeeder(_roleManager);
         await roleSeeder.SeedRolesAsync();
 
-        // Create user seeder
         var userSeeder = new UserSeeder(_userManager);
         var manager = await userSeeder.SeedManagerUserAsync();
         var operator1 = await userSeeder.SeedOperatorUserAsync();
         var persons = await userSeeder.SeedPersonUsersAsync(5);
 
-        // Create account seeder
         var accountSeeder = new AccountSeeder(_accountRepository);
         var allAccounts = new List<Account>();
         foreach (var person in persons)
@@ -85,11 +82,9 @@ public class TestDataSeeder
             allAccounts.AddRange(accounts);
         }
 
-        // Create card seeder
         var cardSeeder = new CardSeeder(_cardRepository);
         await cardSeeder.SeedCardsForAccountsAsync(allAccounts);
 
-        // Create transaction seeder
         var transactionSeeder = new TransactionSeeder(_transactionRepository, _accountRepository);
         await transactionSeeder.SeedSampleTransactionsAsync(allAccounts);
     }

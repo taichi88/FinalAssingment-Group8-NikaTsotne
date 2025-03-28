@@ -24,49 +24,34 @@ public static class InfrastructureServiceRegistration
 {
     public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration configuration)
     {
-        // Database configuration
         services.AddDbContext<BankingSystemDbContext>(options =>
             options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"), 
                 b => b.MigrationsAssembly("BankingSystem.Infrastructure")));
 
-        // Identity configuration
         services.AddIdentity<IdentityPerson, IdentityRole>()
             .AddEntityFrameworkStores<BankingSystemDbContext>()
             .AddDefaultTokenProviders();
 
-        // Database connection
         var connectionString = configuration.GetConnectionString("DefaultConnection");
         services.AddScoped<IDbConnection>(_ => new SqlConnection(connectionString));
 
-        // Register repositories
         services.AddScoped<IAccountRepository, AccountRepository>();
         services.AddScoped<ICardRepository, CardRepository>();
         services.AddScoped<IAccountTransactionRepository, TransactionRepository>();
         services.AddScoped<IPersonRepository, PersonRepository>();
         services.AddScoped<IReportRepository, ReportRepository>();
-        
-        // Register unit of work
         services.AddScoped<IUnitOfWork, UnitOfWork.UnitOfWork>();
-        
-        // Register external services
         services.AddScoped<IExchangeRateApi, ExchangeRateApi>();
         
-        // Register data seeders and initializers
         services.AddTransient<TestDataSeeder>();
         services.AddTransient<DatabaseInitializer>();
-
-        // Register HTTP client for external APIs
         services.AddHttpClient();
-
-        // Configure JWT Authentication
         ConfigureJwtAuthentication(services, configuration);
-
         return services;
     }
 
     public static async Task InitializeDatabaseAsync(this IServiceProvider serviceProvider)
     {
-        // Create a new scope to retrieve scoped services
         using var scope = serviceProvider.CreateScope();
         var dbInitializer = scope.ServiceProvider.GetRequiredService<DatabaseInitializer>();
         await dbInitializer.InitializeAsync();

@@ -1,4 +1,3 @@
--- Transaction Statistics Stored Procedures
 CREATE OR ALTER PROCEDURE sp_GetTransactionCountLast6Months
 AS
 BEGIN

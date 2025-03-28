@@ -37,24 +37,17 @@ public class DatabaseInitializer
         {
             _logger.LogInformation("Starting database initialization...");
 
-            // 1. Check if database exists
             bool databaseExists = await CheckDatabaseExistsAsync();
             _logger.LogInformation("Database exists: {databaseExists}", databaseExists);
 
             //await _dbContext.Database.EnsureCreatedAsync();
 
-            // If database didn't exist before migrations, execute additional steps
             if (!databaseExists)
             {
-                // 2. Apply pending migrations (in all cases)
                 await ApplyMigrationsAsync();
-                // 3. Execute SQL scripts for tables and stored procedures
                 await ExecuteSqlScriptsAsync();
-
-                // 4. Seed initial data
                 await _seeder.SeedAsync();
             }
-
             _logger.LogInformation("Database initialization completed successfully");
         }
         catch (Exception ex)
@@ -70,7 +63,6 @@ public class DatabaseInitializer
         var builder = new SqlConnectionStringBuilder(connectionString);
         var databaseName = builder.InitialCatalog;
 
-        // Remove database name to connect to master
         builder.InitialCatalog = "master";
 
         using var connection = new SqlConnection(builder.ConnectionString);
@@ -86,7 +78,6 @@ public class DatabaseInitializer
     private async Task ApplyMigrationsAsync()
     {
         _logger.LogInformation("Applying pending migrations...");
-        // Still using EF for migrations as this is a standard approach
         await _dbContext.Database.MigrateAsync();
     }
 
@@ -94,7 +85,6 @@ public class DatabaseInitializer
     {
         _logger.LogInformation("Executing SQL scripts for tables and stored procedures...");
 
-        // Get script files from embedded resources
         await ExecuteScriptFromFile("Tables/Accounts.sql");
         await ExecuteScriptFromFile("Tables/Cards.sql");
         await ExecuteScriptFromFile("Tables/Transactions.sql");
@@ -102,18 +92,15 @@ public class DatabaseInitializer
         await ExecuteScriptFromFile("Stored Procedures/AtmWithdrawalStatistics/AtmWithdrawalStatistics.sql");
         await ExecuteScriptFromFile("Stored Procedures/MonthlyTransactionBreakdown/MonthlyTransactionBreakdown.sql");
 
-        // Execute any SP files in the TransactionIncomeByType folder
         await ExecuteScriptFromFile("Stored Procedures/TransactionIncomeByType/sp_GetAverageTransactionIncome.sql");
         await ExecuteScriptFromFile("Stored Procedures/TransactionIncomeByType/sp_GetTransactionIncomeLast6Months.sql");
         await ExecuteScriptFromFile("Stored Procedures/TransactionIncomeByType/sp_GetTransactionIncomeLastMonth.sql");
         await ExecuteScriptFromFile("Stored Procedures/TransactionIncomeByType/sp_GetTransactionIncomeLastYear.sql");
 
-        // Execute any SP files in the TransactionStatistics folder
         await ExecuteScriptFromFile("Stored Procedures/TransactionStatistics/sp_GetTransactionCountLast6Months.sql");
         await ExecuteScriptFromFile("Stored Procedures/TransactionStatistics/sp_GetTransactionCountLastMonth.sql");
         await ExecuteScriptFromFile("Stored Procedures/TransactionStatistics/sp_GetTransactionCountLastYear.sql");
 
-        // Execute any SP files in the UserStatistics folder
         await ExecuteScriptFromFile("Stored Procedures/UserStatistics/sp_GetUserCountLast30Days.sql");
         await ExecuteScriptFromFile("Stored Procedures/UserStatistics/sp_GetUserCountLastYear.sql");
         await ExecuteScriptFromFile("Stored Procedures/UserStatistics/sp_GetUserCountThisYear.sql");

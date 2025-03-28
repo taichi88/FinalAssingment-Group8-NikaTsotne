@@ -1,4 +1,3 @@
--- User Statistics Stored Procedures
 CREATE OR ALTER PROCEDURE sp_GetUserCountThisYear
 AS
 BEGIN

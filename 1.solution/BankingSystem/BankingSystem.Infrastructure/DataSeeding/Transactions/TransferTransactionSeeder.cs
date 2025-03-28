@@ -24,7 +24,6 @@ public class TransferTransactionSeeder
     {
         var transferAmount = 150m;
         
-        // Calculate fee as per AccountTransactionService (1% of amount + 0.5 flat fee)
         var fee = transferAmount * 0.01m + 0.5m;
         var totalDeduction = transferAmount + fee;
 
@@ -44,9 +43,8 @@ public class TransferTransactionSeeder
 
             await _transactionRepository.AddAccountTransactionAsync(transaction);
 
-            // Update account balances
             fromAccount.Balance -= totalDeduction;
-            toAccount.Balance += transferAmount; // Recipient gets full amount without fee
+            toAccount.Balance += transferAmount;
 
             await _accountRepository.UpdateAccountAsync(fromAccount);
             await _accountRepository.UpdateAccountAsync(toAccount);
@@ -55,23 +53,20 @@ public class TransferTransactionSeeder
 
     public async Task SeedDifferentCurrencyTransferAsync(Account fromAccount, Account toAccount)
     {
-        var transferAmount = 100m; // USD
+        var transferAmount = 100m;
         
-        // Calculate fee as per AccountTransactionService (1% of amount + 0.5 flat fee)
         var fee = transferAmount * 0.01m + 0.5m;
         var totalDeduction = transferAmount + fee;
 
         if (fromAccount.Balance >= totalDeduction)
         {
-            // Simple conversion rates for demonstration - in real app this would come from exchange rate API
             var conversionRates = new Dictionary<string, decimal>
             {
-                { CurrencyType.USD.ToString(), 2.5m }, // USD to GEL
-                { CurrencyType.EUR.ToString(), 3.0m }, // EUR to GEL
-                { CurrencyType.GEL.ToString(), 1.0m }  // GEL is base currency
+                { CurrencyType.USD.ToString(), 2.5m }, 
+                { CurrencyType.EUR.ToString(), 3.0m }, 
+                { CurrencyType.GEL.ToString(), 1.0m } 
             };
 
-            // Calculate converted amount using same logic as in AccountTransactionService
             decimal convertedAmount = _currencyConverter.ConvertCurrency(
                 transferAmount, 
                 fromAccount.Currency.ToString(), 
@@ -80,7 +75,7 @@ public class TransferTransactionSeeder
 
             var transaction = new Transaction
             {
-                Amount = transferAmount, // Original amount in source currency
+                Amount = transferAmount,
                 TransactionFee = fee,
                 Currency = fromAccount.Currency,
                 TransactionDate = DateTime.Now,
@@ -92,7 +87,6 @@ public class TransferTransactionSeeder
 
             await _transactionRepository.AddAccountTransactionAsync(transaction);
 
-            // Update account balances with currency conversion
             fromAccount.Balance -= totalDeduction;
             toAccount.Balance += convertedAmount;
 

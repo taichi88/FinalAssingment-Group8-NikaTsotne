@@ -21,7 +21,6 @@ public class AccountSeeder
 
         for (int i = 0; i < accountCount; i++)
         {
-            // Ensure each person has one account in each currency
             CurrencyType currency = currencies[i % currencies.Length];
 
             var account = new Account
@@ -34,10 +33,9 @@ public class AccountSeeder
 
             await _accountRepository.CreateAccountAsync(account);
 
-            // Get the account with ID populated (simplified here, might need adjustment)
             var createdAccount = new Account
             {
-                AccountId = i + 1, // This is a simplification, you'll need to adapt to your actual DB retrieval
+                AccountId = i + 1, 
                 IBAN = account.IBAN,
                 Balance = account.Balance,
                 Currency = account.Currency,

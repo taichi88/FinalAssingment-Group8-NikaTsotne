@@ -1,4 +1,3 @@
--- ATM Withdrawal Statistics Stored Procedure
 CREATE OR ALTER PROCEDURE sp_GetTotalAtmWithdrawalAmount
 AS
 BEGIN

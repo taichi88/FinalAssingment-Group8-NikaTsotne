@@ -1,4 +1,3 @@
--- Transaction Fee Income By Currency Stored Procedures
 CREATE OR ALTER PROCEDURE sp_GetTransactionIncomeLastYear
 AS
 BEGIN

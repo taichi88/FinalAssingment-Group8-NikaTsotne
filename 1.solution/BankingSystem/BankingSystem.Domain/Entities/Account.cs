@@ -25,5 +25,5 @@ public class Account
     public required CurrencyType Currency { get; set; }
 
     [Required(ErrorMessage = "Person ID is required.")]
-    public required string PersonId { get; set; }
+    public required string? PersonId { get; set; }
 }

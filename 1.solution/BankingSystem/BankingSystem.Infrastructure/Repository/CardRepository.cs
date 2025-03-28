@@ -23,7 +23,6 @@ public class CardRepository : ICardRepository
 
     public async Task CreateCardAsync(Card card)
     {
-        // Card is already encrypted/hashed by the service before reaching the repository
         const string query =
             "INSERT INTO Cards(FirstName, Lastname, CardNumber, ExpirationDate, CVV, PinCode, AccountId) " +
             "VALUES (@Firstname, @Lastname, @CardNumber, @ExpirationDate, @Cvv, @PinCode, @AccountId)";
@@ -33,7 +32,6 @@ public class CardRepository : ICardRepository
 
     public async Task<Card?> GetCardByNumberAsync(string cardNumber)
     {
-        // Encrypt the card number for database lookup
         string encryptedCardNumber = CardSecurityHelper.Encrypt(cardNumber);
 
         return await _connection.QuerySingleOrDefaultAsync<Card>(
@@ -44,7 +42,6 @@ public class CardRepository : ICardRepository
 
     public async Task UpdateCardAsync(Card card)
     {
-        // Card is already encrypted/hashed by the service before reaching the repository
         const string query =
             "UPDATE Cards SET Firstname = @Firstname, Lastname = @Lastname, ExpirationDate = @ExpirationDate, " +
             "CVV = @Cvv, PinCode = @PinCode, AccountId = @AccountId WHERE CardNumber = @CardNumber";
@@ -54,7 +51,6 @@ public class CardRepository : ICardRepository
 
     public async Task<Account?> GetAccountByCardNumberAsync(string cardNumber)
     {
-        // Encrypt the card number for database lookup
         string encryptedCardNumber = CardSecurityHelper.Encrypt(cardNumber);
 
         const string query = @"SELECT a.Id AS AccountId, a.*
@@ -70,10 +66,8 @@ public class CardRepository : ICardRepository
 
     public async Task<bool> ValidateCardAsync(string cardNumber, string pinCode)
     {
-        // Encrypt the card number for database lookup
         string encryptedCardNumber = CardSecurityHelper.Encrypt(cardNumber);
 
-        // Get the card using the encrypted card number
         var card = await _connection.QuerySingleOrDefaultAsync<Card>(
             "SELECT * FROM Cards WHERE CardNumber = @CardNumber",
             new { CardNumber = encryptedCardNumber },
@@ -81,10 +75,7 @@ public class CardRepository : ICardRepository
 
         if (card == null) return false;
 
-        // Hash the pin code for comparison
         string hashedPinCode = CardSecurityHelper.HashPinCode(pinCode);
-
-        // Compare the hashed PIN with the stored hashed PIN
         return hashedPinCode == card.PinCode;
     }
 }

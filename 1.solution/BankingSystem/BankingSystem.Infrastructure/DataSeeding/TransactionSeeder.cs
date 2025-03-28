@@ -23,13 +23,10 @@ public class TransactionSeeder
 
     public async Task SeedSampleTransactionsAsync(List<Account> accounts)
     {
-        // Ensure we have enough accounts for all scenarios
         if (accounts.Count < 5) return;
 
-        // 1. ATM Withdrawal
         await _atmTransactionSeeder.SeedAtmWithdrawalAsync(accounts[0]);
 
-        // 2. Transfer to Others (Same Currency)
         var fromAccount = accounts[2];
         var toAccount = accounts.FirstOrDefault(a => 
             a.PersonId != fromAccount.PersonId && 
@@ -40,7 +37,6 @@ public class TransactionSeeder
             await _transferTransactionSeeder.SeedSameCurrencyTransferAsync(fromAccount, toAccount);
         }
 
-        // 3. Transfer to Others (Different Currency)
         var fromAccountDiff = accounts.FirstOrDefault(a => a.Currency == CurrencyType.USD);
         var toAccountDiff = accounts.FirstOrDefault(a => 
             a.Currency == CurrencyType.EUR && 

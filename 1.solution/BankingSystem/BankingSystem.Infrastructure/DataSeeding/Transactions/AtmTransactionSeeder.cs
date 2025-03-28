@@ -20,7 +20,6 @@ public class AtmTransactionSeeder
     {
         var withdrawalAmount = 200m;
         
-        // Calculate fee as per AtmService (2% of the amount)
         var fee = withdrawalAmount * 0.02m;
         var totalAmount = withdrawalAmount + fee;
 
@@ -33,14 +32,12 @@ public class AtmTransactionSeeder
                 Currency = account.Currency,
                 TransactionDate = DateTime.Now,
                 FromAccountId = account.AccountId,
-                ToAccountId = account.AccountId, // Same account for ATM withdrawal
-                IsATM = true,
-                TransactionType = null // ATM transactions don't have a transaction type in AtmService
+                ToAccountId = account.AccountId, 
+                TransactionType = null 
             };
 
             await _transactionRepository.AddAccountTransactionAsync(atmTransaction);
 
-            // Update account balance
             account.Balance -= totalAmount;
             await _accountRepository.UpdateAccountAsync(account);
         }
