@@ -15,8 +15,6 @@ namespace BankingSystem.Middleware
         private readonly ILogger<ErrorHandlingMiddleware> _logger;
         private readonly ProblemDetailsFactory _problemDetailsFactory;
         private readonly IHostEnvironment _environment;
-
-        // Define a record for storing exception details
         private record ExceptionDetails(HttpStatusCode StatusCode, string Message, string ExceptionType);
 
         public ErrorHandlingMiddleware(
@@ -35,16 +33,13 @@ namespace BankingSystem.Middleware
         {
             try
             {
-                // Call the next middleware
                 await _next(context);
             }
             catch (Exception ex)
             {
-                // Log based on environment
                 ExceptionDetails exceptionDetails;
                 if (_environment.IsDevelopment())
                 {
-                    // In development, log detailed exception information
                     _logger.LogError(ex, "Exception occurred: {ExceptionType} - {Message} - Stack: {StackTrace}",
                         ex.GetType().Name, ex.Message, ex.StackTrace);
                     exceptionDetails = MapException(ex);
@@ -53,7 +48,6 @@ namespace BankingSystem.Middleware
                 }
                 else
                 {
-                    // In production, log only user-friendly information
                     exceptionDetails = MapException(ex);
                     _logger.LogError("{ExceptionType}: {StatusCode} - {UserFriendlyMessage}",
                         exceptionDetails.ExceptionType, (int)exceptionDetails.StatusCode, exceptionDetails.Message);
@@ -61,19 +55,14 @@ namespace BankingSystem.Middleware
 
                 if (context.Response.HasStarted) throw;
 
-                // Use the combined mapping function
                 exceptionDetails = MapException(ex);
                 context.Response.StatusCode = (int)exceptionDetails.StatusCode;
-
-                // Generate response based on accept header
                 await GenerateErrorResponse(context, ex, exceptionDetails);
             }
         }
 
         private async Task GenerateErrorResponse(HttpContext context, Exception exception, ExceptionDetails details)
         {
-
-            // Return user-friendly ApiResponse format
             var apiResponse = ApiResponse.CreateErrorResponse(details.StatusCode, details.Message);
             context.Response.ContentType = "application/json";
 
@@ -82,7 +71,6 @@ namespace BankingSystem.Middleware
 
         }
 
-        // Combined mapping function that handles both status code and friendly message
         private ExceptionDetails MapException(Exception exception)
         {
             return exception switch
@@ -95,7 +83,6 @@ namespace BankingSystem.Middleware
             };
         }
 
-        // Helper method for controllers to create success responses
         public static ApiResponse CreateSuccessResponse(HttpStatusCode statusCode, object? result = null)
         {
             return ApiResponse.CreateSuccessResponse(statusCode, result);
