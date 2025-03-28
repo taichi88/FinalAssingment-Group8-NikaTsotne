@@ -1,16 +1,14 @@
 ﻿using BankingSystem.Application.DTO.Response;
-using BankingSystem.Application.Exceptions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
-using Serilog;
+using Microsoft.Extensions.Logging;
+
 using System.Net;
 
 namespace BankingSystem.Filters
 {
-    public class ValidateModelAttribute : ActionFilterAttribute
+    public class ValidateModelAttribute(ILogger<ValidateModelAttribute> logger) : ActionFilterAttribute
     {
-        private readonly Serilog.ILogger _logger = Log.ForContext<ValidateModelAttribute>();
-
         public override void OnActionExecuting(ActionExecutingContext context)
         {
             if (!context.ModelState.IsValid)
@@ -23,7 +21,7 @@ namespace BankingSystem.Filters
                 // Combine all validation errors into a single message
                 var errorMessage = string.Join("; ", errors);
                 var response = ApiResponse.CreateErrorResponse(HttpStatusCode.BadRequest, errorMessage);
-                _logger.Warning("Validation error: {ErrorMessage}", errorMessage);
+                logger.LogWarning("Validation error: {ErrorMessage}", errorMessage);
                 context.Result = new BadRequestObjectResult(response);
             }
         }
