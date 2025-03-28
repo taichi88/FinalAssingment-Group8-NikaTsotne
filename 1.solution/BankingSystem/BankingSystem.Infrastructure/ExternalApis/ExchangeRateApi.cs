@@ -1,5 +1,5 @@
 ﻿using System.Text.Json;
-using BankingSystem.Domain.ExternalApiContracts;
+using BankingSystem.Domain.IExternalApi;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 

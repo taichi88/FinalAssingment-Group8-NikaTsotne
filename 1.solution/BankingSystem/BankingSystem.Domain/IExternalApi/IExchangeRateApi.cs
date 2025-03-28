@@ -1,4 +1,4 @@
-﻿namespace BankingSystem.Domain.ExternalApiContracts;
+﻿namespace BankingSystem.Domain.IExternalApi;
 
 public interface IExchangeRateApi
 {

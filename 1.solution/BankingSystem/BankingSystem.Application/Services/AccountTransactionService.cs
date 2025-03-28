@@ -3,7 +3,7 @@ using BankingSystem.Application.DTO;
 using BankingSystem.Application.Exceptions;
 using BankingSystem.Domain.Entities;
 using BankingSystem.Application.IServices;
-using BankingSystem.Domain.ExternalApiContracts;
+using BankingSystem.Domain.IExternalApi;
 using BankingSystem.Domain.IUnitOfWork;
 using BankingSystem.Domain.Enums;
 

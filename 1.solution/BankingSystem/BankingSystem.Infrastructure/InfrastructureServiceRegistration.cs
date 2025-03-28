@@ -1,5 +1,5 @@
 using BankingSystem.Application.Identity;
-using BankingSystem.Domain.ExternalApiContracts;
+using BankingSystem.Domain.IExternalApi;
 using BankingSystem.Domain.IRepository;
 using BankingSystem.Domain.IUnitOfWork;
 using BankingSystem.Infrastructure.Data.DatabaseContext;
