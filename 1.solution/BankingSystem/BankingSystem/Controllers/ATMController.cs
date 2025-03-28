@@ -10,6 +10,8 @@ namespace BankingSystem.Controllers;
 
 [ValidateModel]
 [ApiController]
+[Authorize]
+[AtmCardAuthorization]
 [Route("api/[controller]")]
 public class AtmController : ControllerBase
 {
@@ -31,8 +33,6 @@ public class AtmController : ControllerBase
         return Ok(ErrorHandlingMiddleware.CreateSuccessResponse(HttpStatusCode.OK, authResponse));
     }
 
-    [Authorize]
-    [AtmCardAuthorization]
     [HttpGet("balance")]
     public async Task<IActionResult> GetBalance()
     {
@@ -41,8 +41,6 @@ public class AtmController : ControllerBase
         return Ok(ErrorHandlingMiddleware.CreateSuccessResponse(HttpStatusCode.OK, result));
     }
 
-    [Authorize]
-    [AtmCardAuthorization]
     [HttpPost("withdraw")]
     public async Task<IActionResult> WithdrawMoney(WithdrawMoneyDto withdrawMoneyDto)
     {
@@ -51,8 +49,6 @@ public class AtmController : ControllerBase
         return Ok(ErrorHandlingMiddleware.CreateSuccessResponse(HttpStatusCode.OK, result));
     }
 
-    [Authorize]
-    [AtmCardAuthorization]
     [HttpPut("pin")]
     public async Task<IActionResult> UpdatePin(ChangePinCodeDto changePinCodeDto)
     {

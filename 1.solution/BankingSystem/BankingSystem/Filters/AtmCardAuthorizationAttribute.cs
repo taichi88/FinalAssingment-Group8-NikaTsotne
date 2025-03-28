@@ -1,26 +1,35 @@
-﻿// BankingSystem/Filters/AtmCardAuthorizationAttribute.cs
+﻿using BankingSystem.Application.Exceptions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using System.Threading.Tasks;
 
 namespace BankingSystem.Filters;
 
-public class AtmCardAuthorizationAttribute : TypeFilterAttribute
+public class AtmCardAuthorizationAttribute() : TypeFilterAttribute(typeof(AtmCardAuthorizationFilter))
 {
-    public AtmCardAuthorizationAttribute() : base(typeof(AtmCardAuthorizationFilter))
-    {
-    }
-
     private class AtmCardAuthorizationFilter : IAsyncAuthorizationFilter
     {
+        private const string AtmSessionClaimType = "atmSession";
+        private const string CardNumberClaimType = "cardNumber";
+
         public async Task OnAuthorizationAsync(AuthorizationFilterContext context)
         {
-            var atmSessionClaim = context.HttpContext.User.FindFirst("atmSession");
-            var cardNumberClaim = context.HttpContext.User.FindFirst("cardNumber");
-
-            if (atmSessionClaim == null || cardNumberClaim == null || atmSessionClaim.Value != "true")
+            if (!IsAuthorized(context))
             {
-                context.Result = new UnauthorizedResult();
+                throw new UnauthorizedException("Bank Card is not Authorized");
             }
+
+            await Task.CompletedTask;
+        }
+
+        private static bool IsAuthorized(AuthorizationFilterContext context)
+        {
+            var atmSessionClaim = context.HttpContext.User.FindFirst(AtmSessionClaimType);
+            var cardNumberClaim = context.HttpContext.User.FindFirst(CardNumberClaimType);
+
+            return atmSessionClaim != null &&
+                   cardNumberClaim != null &&
+                   atmSessionClaim.Value == "true";
         }
     }
 }
