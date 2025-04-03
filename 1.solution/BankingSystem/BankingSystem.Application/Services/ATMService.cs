@@ -138,12 +138,13 @@ public class AtmService : IAtmService
             throw new NotFoundException("Card not found");
         }
 
-        string hashedOldPinCode = CardSecurityHelper.HashPinCode(changePinCodeDto.OldPinCode);
-        if (card.PinCode != hashedOldPinCode)
+        bool isPinValid = CardSecurityHelper.VerifyPinCode(changePinCodeDto.OldPinCode, card.PinCode);
+        if (!isPinValid)
         {
             _logger.LogWarning("Old PIN code is incorrect for card {CardNumber}", cardNumber);
             throw new ValidationException("Old PIN code is incorrect");
         }
+
 
         card.PinCode = CardSecurityHelper.HashPinCode(changePinCodeDto.NewPinCode);
         await _unitOfWork.CardRepository.UpdateCardAsync(card);

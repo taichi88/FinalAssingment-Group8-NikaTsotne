@@ -75,7 +75,8 @@ public class CardRepository : ICardRepository
 
         if (card == null) return false;
 
-        string hashedPinCode = CardSecurityHelper.HashPinCode(pinCode);
-        return hashedPinCode == card.PinCode;
+        // Use the VerifyPinCode method to check if the provided pinCode matches the stored hash
+        return CardSecurityHelper.VerifyPinCode(pinCode, card.PinCode);
     }
+
 }
