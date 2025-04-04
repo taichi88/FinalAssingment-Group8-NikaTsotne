@@ -20,7 +20,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("login")]
-    public async Task<IActionResult> Login(PersonLoginDto loginModel)
+    public async Task<IActionResult> Login([FromForm] PersonLoginDto loginModel)
     {
         var result = await _authService.AuthenticationPersonAsync(loginModel);
         return Ok(ErrorHandlingMiddleware.CreateSuccessResponse(HttpStatusCode.OK, result));

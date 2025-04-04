@@ -15,7 +15,7 @@ namespace BankingSystem.Controllers;
 public class PersonController(IAccountTransactionService transactionService, IPersonService personService) : ControllerBase
 {
     [HttpPost("transaction")]
-    public async Task<IActionResult> CreateTransaction(TransactionDto transactionDto)
+    public async Task<IActionResult> CreateTransaction([FromForm] TransactionDto transactionDto)
     {
         var userId = User.FindFirst("userId")!.Value;
         var result = await transactionService.TransactionBetweenAccountsAsync(transactionDto, userId);

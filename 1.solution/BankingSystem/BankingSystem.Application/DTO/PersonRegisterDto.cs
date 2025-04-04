@@ -13,7 +13,7 @@ public class PersonRegisterDto
     public required string Lastname { get; set; }
 
     [Required(ErrorMessage = "ID number is required.")]
-    [StringLength(11, MinimumLength = 11, ErrorMessage = "ID number must be exactly 11 characters.")]
+    [RegularExpression(@"^\d{11}$", ErrorMessage = "ID number must be exactly 11 digits.")]
     public required string IdNumber { get; set; }
 
     [Required(ErrorMessage = "Birth date is required.")]
