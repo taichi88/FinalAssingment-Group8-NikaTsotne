@@ -14,7 +14,7 @@ namespace BankingSystem.Controllers;
 [Route("api/[controller]")]
 public class PersonController(IAccountTransactionService transactionService, IPersonService personService) : ControllerBase
 {
-    [HttpPost("transactions")]
+    [HttpPost("transaction")]
     public async Task<IActionResult> CreateTransaction(TransactionDto transactionDto)
     {
         var userId = User.FindFirst("userId")!.Value;
