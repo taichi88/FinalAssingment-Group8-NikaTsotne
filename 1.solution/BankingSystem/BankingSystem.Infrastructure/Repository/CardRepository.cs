@@ -34,20 +34,29 @@ public class CardRepository : ICardRepository
     {
         string encryptedCardNumber = CardSecurityHelper.Encrypt(cardNumber);
 
-        return await _connection.QuerySingleOrDefaultAsync<Card>(
+        var encryptedCard = await _connection.QuerySingleOrDefaultAsync<Card>(
             "SELECT * FROM Cards WHERE CardNumber = @CardNumber",
             new { CardNumber = encryptedCardNumber },
             _transaction);
+
+        if (encryptedCard == null) return null;
+
+        return CardConverter.DecryptCard(encryptedCard);
     }
+
+
 
     public async Task UpdateCardAsync(Card card)
     {
+        var encryptedCard = CardConverter.EncryptCard(card);
+
         const string query =
             "UPDATE Cards SET Firstname = @Firstname, Lastname = @Lastname, ExpirationDate = @ExpirationDate, " +
             "CVV = @Cvv, PinCode = @PinCode, AccountId = @AccountId WHERE CardNumber = @CardNumber";
 
-        await _connection.ExecuteAsync(query, card, _transaction);
+        await _connection.ExecuteAsync(query, encryptedCard, _transaction);
     }
+
 
     public async Task<Account?> GetAccountByCardNumberAsync(string cardNumber)
     {

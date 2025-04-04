@@ -38,12 +38,6 @@ public class AtmService : IAtmService
 
         var card = await _unitOfWork.CardRepository.GetCardByNumberAsync(cardAuthorizationDto.CardNumber);
 
-        if (card == null)
-        {
-            _logger.LogWarning("Card not found after validation {CardNumber}", cardAuthorizationDto.CardNumber);
-            throw new NotFoundException("Card not found");
-        }
-
         if (card.ExpirationDate < DateTime.Now.Date)
         {
             _logger.LogWarning("Authorization failed for card {CardNumber}: card expired on {ExpirationDate}",
@@ -54,6 +48,7 @@ public class AtmService : IAtmService
         _logger.LogInformation("Authorization successful for card {CardNumber}", cardAuthorizationDto.CardNumber);
         return "Card authorized successfully";
     }
+
 
     public async Task<string> ViewBalanceAsync(string cardNumber)
     {

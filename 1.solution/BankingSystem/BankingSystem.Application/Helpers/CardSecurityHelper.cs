@@ -30,7 +30,6 @@ public static class CardSecurityHelper
         return key;
     }
 
-
     public static string GenerateCardNumber()
     {
         Random random = new Random();
@@ -42,7 +41,7 @@ public static class CardSecurityHelper
         }
 
         int sum = 0;
-        bool alternate = true; 
+        bool alternate = true;
         for (int i = 14; i >= 0; i--)
         {
             int digit = digits[i];
@@ -87,7 +86,7 @@ public static class CardSecurityHelper
 
         using var hmac = new HMACSHA256(aes.Key);
         byte[] ivHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(plainText));
-        byte[] iv = new byte[16]; 
+        byte[] iv = new byte[16];
         Array.Copy(ivHash, iv, iv.Length);
         aes.IV = iv;
 
@@ -102,6 +101,32 @@ public static class CardSecurityHelper
         }
 
         return Convert.ToBase64String(ms.ToArray());
+    }
+
+    public static string Decrypt(string cipherText)
+    {
+        if (string.IsNullOrEmpty(cipherText))
+            return cipherText;
+
+        byte[] cipherBytes = Convert.FromBase64String(cipherText);
+
+        using var aes = Aes.Create();
+        aes.Key = Encoding.UTF8.GetBytes(EncryptionKey.PadRight(32, '0').Substring(0, 32));
+
+        byte[] iv = new byte[16];
+        Array.Copy(cipherBytes, 0, iv, 0, iv.Length);
+        aes.IV = iv;
+
+        using var ms = new MemoryStream();
+        ms.Write(cipherBytes, 16, cipherBytes.Length - 16);
+
+        ms.Position = 0; // Reset the position to the beginning of the stream
+
+        using (var cs = new CryptoStream(ms, aes.CreateDecryptor(), CryptoStreamMode.Read))
+        using (var sr = new StreamReader(cs))
+        {
+            return sr.ReadToEnd();
+        }
     }
 
     public static string HashPinCode(string pinCode)
@@ -150,6 +175,5 @@ public static class CardSecurityHelper
             return true;
         }
     }
-
-
 }
+
