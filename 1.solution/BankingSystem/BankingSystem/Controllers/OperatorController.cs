@@ -23,21 +23,21 @@ public class OperatorController : ControllerBase
         _cardService = cardService;
     }
 
-    [HttpPost("users")]
+    [HttpPost("user")]
     public async Task<IActionResult> RegisterUser(PersonRegisterDto registerModel)
     {
         var result = await _authService.RegisterPersonAsync(registerModel);
         return Ok(ErrorHandlingMiddleware.CreateSuccessResponse(HttpStatusCode.OK, result));
     }
 
-    [HttpPost("accounts")]
+    [HttpPost("account")]
     public async Task<IActionResult> CreateAccount(AccountRegisterDto accountRegisterDto)
     {
         var result = await _accountService.CreateAccountAsync(accountRegisterDto);
         return Ok(ErrorHandlingMiddleware.CreateSuccessResponse(HttpStatusCode.OK, result));
     }
 
-    [HttpPost("cards")]
+    [HttpPost("card")]
     public async Task<IActionResult> CreateCard(CardRegisterDto cardRegisterDto)
     {
         var result = await _cardService.CreateCardAsync(cardRegisterDto);
