@@ -8,6 +8,7 @@ namespace BankingSystem.Application.Helpers
         {
             return new Card
             {
+                CardId = encryptedCard.CardId,
                 Firstname = encryptedCard.Firstname,
                 Lastname = encryptedCard.Lastname,
                 CardNumber = CardSecurityHelper.Decrypt(encryptedCard.CardNumber),
@@ -22,6 +23,7 @@ namespace BankingSystem.Application.Helpers
         {
             return new Card
             {
+                CardId = decryptedCard.CardId,
                 Firstname = decryptedCard.Firstname,
                 Lastname = decryptedCard.Lastname,
                 CardNumber = CardSecurityHelper.Encrypt(decryptedCard.CardNumber),

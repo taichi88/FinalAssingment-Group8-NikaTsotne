@@ -9,7 +9,7 @@ namespace BankingSystem.Controllers
 {
     [ValidateModel]
     [ApiController]
-    [Authorize(Roles = "Manager")]
+    //[Authorize(Roles = "Manager")]
     [Route("api/[controller]")]
     public class ReportController : ControllerBase
     {

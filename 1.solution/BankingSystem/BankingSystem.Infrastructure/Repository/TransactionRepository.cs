@@ -22,7 +22,7 @@ public class TransactionRepository : IAccountTransactionRepository
     public async Task AddAccountTransactionAsync(Transaction transactionObj)
     {
         const string query =
-            "INSERT INTO Transactions(Amount, Currency, TransactionDate, FromAccountId, ToAccountId, IsATM, TransactionType) VALUES (@Amount, @Currency, @TransactionDate, @FromAccountId, @ToAccountId, @IsATM, @TransactionType)";
+            "INSERT INTO Transactions(Amount, Currency, TransactionDate, FromAccountId, ToAccountId, IsATM, TransactionType, TransactionFee) VALUES (@Amount, @Currency, @TransactionDate, @FromAccountId, @ToAccountId, @IsATM, @TransactionType, @TransactionFee)";
 
         await _connection.ExecuteAsync(query, transactionObj, _transaction);
     }

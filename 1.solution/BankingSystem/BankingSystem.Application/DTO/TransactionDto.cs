@@ -21,5 +21,5 @@ public class TransactionDto
 
     [Required(ErrorMessage = "Transaction type is required.")]
     [EnumDataType(typeof(TransactionType), ErrorMessage = $"Invalid transaction type. Use 'ToMyAccount' or 'TransferToOthers'.")]
-    public string TransactionType { get; set; }
+    public TransactionType TransactionType { get; set; }
 }

@@ -45,7 +45,7 @@ public class AccountTransactionService : IAccountTransactionService
                 Amount = transactionDto.Amount,
                 TransactionDate = DateTime.Now,
                 IsATM = false,
-                TransactionType = Enum.Parse<TransactionType>(transactionDto.TransactionType)
+                TransactionType = transactionDto.TransactionType
             };
 
             switch (transaction.TransactionType)
