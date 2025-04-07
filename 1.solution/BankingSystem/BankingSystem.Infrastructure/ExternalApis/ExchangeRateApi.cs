@@ -3,7 +3,7 @@ using BankingSystem.Domain.IExternalApi;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 
-namespace BankingSystem.Infrastructure.Data.ExternalApis;
+namespace BankingSystem.Infrastructure.ExternalApis;
 
 public class ExchangeRateApi : IExchangeRateApi
 {
