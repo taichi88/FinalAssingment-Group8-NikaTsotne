@@ -74,7 +74,7 @@ public class AccountTransactionService : IAccountTransactionService
                         throw new ValidationException("The transaction was failed. You don't have enough money");
 
                     fromAccount.Balance -= transaction.Amount;
-                    transaction.TransactionFee = 0; // No fee for this transaction type
+                    transaction.TransactionFee = _transactionConstants.ToMyAccountFee;
                     transaction.Amount = await ConvertCurrencyAsync(transaction.Amount, fromAccount.Currency, toAccount.Currency);
                     toAccount.Balance += transaction.Amount;
                     break;
