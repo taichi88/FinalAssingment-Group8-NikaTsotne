@@ -35,7 +35,7 @@ public class AccountTransactionService : IAccountTransactionService
             var toAccount = await GetAccountSafelyAsync(transactionDto.ToAccountId, "Destination");
 
             if (fromAccount.PersonId != userId)
-                throw new UnauthorizedException("You are not authorized to perform this transaction");
+                throw new UnauthorizedException("You are not authorized to access this account.");
 
             var transaction = new Transaction
             {
