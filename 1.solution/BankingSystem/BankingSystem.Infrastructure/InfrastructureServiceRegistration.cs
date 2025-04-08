@@ -3,7 +3,7 @@ using BankingSystem.Domain.IExternalApi;
 using BankingSystem.Domain.IRepository;
 using BankingSystem.Domain.IUnitOfWork;
 using BankingSystem.Infrastructure.Data.DatabaseContext;
-using BankingSystem.Infrastructure.Data.ExternalApis;
+using BankingSystem.Infrastructure.ExternalApis;
 using BankingSystem.Infrastructure.DataSeeding;
 using BankingSystem.Infrastructure.Repository;
 using BankingSystem.Infrastructure.UnitOfWork;
