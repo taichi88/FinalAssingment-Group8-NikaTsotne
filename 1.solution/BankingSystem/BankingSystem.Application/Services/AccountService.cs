@@ -4,6 +4,8 @@ using BankingSystem.Application.IServices;
 using BankingSystem.Domain.IUnitOfWork;
 using BankingSystem.Application.Exceptions;
 using Microsoft.Extensions.Logging;
+using BankingSystem.Application.Helpers;
+
 
 namespace BankingSystem.Application.Services;
 
@@ -30,9 +32,11 @@ public class AccountService : IAccountService
             throw new NotFoundException($"Person with ID number {accountRegisterDto.IdNumber} not found");
         }
 
+        string iban = accountRegisterDto.Iban ?? IbanGenerator.GenerateValidIban();
+
         var account = new Account
         {
-            IBAN = accountRegisterDto.Iban,
+            IBAN = iban,
             Balance = accountRegisterDto.Balance,
             PersonId = personId,
             Currency = accountRegisterDto.Currency
@@ -43,6 +47,6 @@ public class AccountService : IAccountService
         _logger.LogInformation("Bank account with IBAN {IBAN} created successfully for user {IdNumber}",
             accountRegisterDto.Iban, accountRegisterDto.IdNumber);
 
-        return "Account created successfully";
+        return $"Account created successfully. Your Account IBAN is: {iban}";
     }
 }

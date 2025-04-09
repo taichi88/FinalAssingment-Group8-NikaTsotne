@@ -10,9 +10,8 @@ public class AccountRegisterDto
     [RegularExpression(@"^\d{11}$", ErrorMessage = "ID number must be exactly 11 digits.")]
     public required string IdNumber { get; set; }
 
-    [Required(ErrorMessage = "IBAN is required.")]
-    [IbanValidation]
-    public string Iban { get; set; }
+    [IbanValidation(AllowNull = true)]
+    public string? Iban { get; set; }
 
     [Required(ErrorMessage = "Balance is required.")]
     [NonNegativeNumberValidation(ErrorMessage = "Balance cannot be negative.")]

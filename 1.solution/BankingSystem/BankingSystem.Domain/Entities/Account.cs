@@ -13,7 +13,7 @@ public class Account
     public int AccountId { get; set; }
 
     [Required(ErrorMessage = "IBAN is required.")]
-    [IbanValidation]
+    [IbanValidation(AllowNull = false)]
     public required string IBAN { get; set; }
 
     [Column(TypeName = "decimal(18,2)")]

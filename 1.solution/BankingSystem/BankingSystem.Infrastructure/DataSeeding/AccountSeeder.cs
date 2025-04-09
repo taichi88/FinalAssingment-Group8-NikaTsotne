@@ -1,3 +1,4 @@
+using BankingSystem.Application.Helpers;
 using BankingSystem.Application.Identity;
 using BankingSystem.Domain.Entities;
 using BankingSystem.Domain.Enums;
@@ -25,7 +26,7 @@ public class AccountSeeder
 
             var account = new Account
             {
-                IBAN = DataSeederHelpers.GenerateIban(),
+                IBAN = IbanGenerator.GenerateValidIban(),
                 Balance = 1000m * (i + 1),
                 Currency = currency,
                 PersonId = person.Id
