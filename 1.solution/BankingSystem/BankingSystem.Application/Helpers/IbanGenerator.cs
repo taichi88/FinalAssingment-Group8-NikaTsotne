@@ -29,7 +29,7 @@ public static class IbanGenerator
         StringBuilder bban = new();
 
         // Add 2 letters for bank code (e.g., BG for Bank of Georgia)
-        string[] commonBankCodes = { "BG", "TB", "LB", "CD", "PC" }; // Common Georgian bank codes
+        string[] commonBankCodes = {"CD"}; // Common Georgian bank codes
         bban.Append(commonBankCodes[_random.Next(commonBankCodes.Length)]);
 
         // Add 16 digits for the account number
