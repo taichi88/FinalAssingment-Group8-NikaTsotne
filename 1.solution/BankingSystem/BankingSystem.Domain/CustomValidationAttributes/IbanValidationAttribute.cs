@@ -5,7 +5,6 @@ using System.Text.RegularExpressions;
 namespace BankingSystem.Domain.CustomValidationAttributes;
 public class IbanValidationAttribute : ValidationAttribute
 {
-    // Updated pattern for Georgian IBANs: 2 letters + 2 digits + 2 letters + 16 digits = 22 characters total
     private const string IbanPattern = @"^[A-Z]{2}\d{2}[A-Z]{2}\d{16}$";
 
     public bool AllowNull { get; set; } = false;

@@ -4,7 +4,6 @@ using BankingSystem.Application.Exceptions;
 using BankingSystem.Application.Helpers;
 using BankingSystem.Application.IServices;
 using BankingSystem.Domain.Entities;
-using BankingSystem.Domain.Enums;
 using BankingSystem.Domain.IUnitOfWork;
 using Microsoft.Extensions.Logging;
 
