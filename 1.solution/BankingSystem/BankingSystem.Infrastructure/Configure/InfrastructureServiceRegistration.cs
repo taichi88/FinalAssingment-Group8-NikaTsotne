@@ -18,7 +18,7 @@ using System.Data;
 using System.Text;
 using BankingSystem.Infrastructure.Data;
 
-namespace BankingSystem.Infrastructure;
+namespace BankingSystem.Infrastructure.Configure;
 
 public static class InfrastructureServiceRegistration
 {

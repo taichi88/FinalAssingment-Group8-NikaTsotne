@@ -3,7 +3,7 @@ using BankingSystem.Application.IServices;
 using BankingSystem.Application.Services;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace BankingSystem.Application;
+namespace BankingSystem.Application.Configure;
 
 public static class ApplicationServiceRegistration
 {

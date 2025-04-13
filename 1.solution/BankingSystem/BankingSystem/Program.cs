@@ -1,8 +1,8 @@
-using BankingSystem.Application;
+using BankingSystem.Application.Configure;
 using BankingSystem.Application.Helpers;
 using BankingSystem.Configure;
 using BankingSystem.Domain;
-using BankingSystem.Infrastructure;
+using BankingSystem.Infrastructure.Configure;
 using BankingSystem.Infrastructure.Data;
 using BankingSystem.Infrastructure.Data.DatabaseContext;
 using BankingSystem.Middleware;
