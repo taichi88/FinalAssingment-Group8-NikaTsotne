@@ -43,7 +43,6 @@ public class TestDataSeeder
             _connection.Open();
             _transaction = _connection.BeginTransaction();
 
-            // Set transaction for all repositories
             _accountRepository.SetTransaction(_transaction);
             _cardRepository.SetTransaction(_transaction);
             _transactionRepository.SetTransaction(_transaction);
