@@ -104,7 +104,7 @@ public class PersonAuthService : IPersonAuthService
         return $"User {registerDto.Email} registered successfully with role {roleName}";
     }
 
-    public async Task<AuthenticationResponse> GenerateJwtToken(IdentityPerson user)
+    private async Task<AuthenticationResponse> GenerateJwtToken(IdentityPerson user)
     {
         _logger.LogInformation("Generating JWT token for user {Email}", user.Email);
 

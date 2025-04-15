@@ -8,5 +8,4 @@ public interface IPersonAuthService
 {
     Task<AuthenticationResponse> AuthenticationPersonAsync(PersonLoginDto loginDto);
     Task<string> RegisterPersonAsync(PersonRegisterDto registerDto);
-    public Task<AuthenticationResponse> GenerateJwtToken(IdentityPerson user);
 }
