@@ -61,7 +61,6 @@ namespace BankingSystem.Application.Services
                 var last1YearIncome = await _unitOfWork.ReportRepository.GetTransactionIncomeLastYearAsync();
                 var averageIncome = await _unitOfWork.ReportRepository.GetAverageTransactionIncomeAsync();
                 
-                await _unitOfWork.CommitAsync();
                 
                 return new TransactionStatisticsResponse
                 {
