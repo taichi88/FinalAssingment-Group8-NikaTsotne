@@ -1,5 +1,4 @@
-﻿// BankingSystem.Application/DTO/Response/AtmAuthenticationResponse.cs
-namespace BankingSystem.Application.DTO.Response;
+﻿namespace BankingSystem.Application.DTO.Response;
 
 public class AtmAuthenticationResponse
 {

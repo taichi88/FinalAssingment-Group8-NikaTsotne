@@ -1,11 +1,8 @@
 ﻿using BankingSystem.Application.DTO.Response;
 using BankingSystem.Application.Exceptions;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.WebUtilities;
 using System.Text.Json;
 using System.Net;
-using Microsoft.Extensions.Hosting;
 
 namespace BankingSystem.Middleware
 {

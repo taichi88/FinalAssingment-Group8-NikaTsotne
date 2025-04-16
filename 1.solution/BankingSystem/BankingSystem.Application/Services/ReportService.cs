@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using BankingSystem.Application.DTO.Response.ReportResponses;
+﻿using BankingSystem.Application.DTO.Response.ReportResponses;
 using BankingSystem.Application.IServices;
 using BankingSystem.Domain.Enums;
-using BankingSystem.Domain.IRepository;
 using BankingSystem.Domain.IUnitOfWork;
 using Microsoft.Extensions.Logging;
 

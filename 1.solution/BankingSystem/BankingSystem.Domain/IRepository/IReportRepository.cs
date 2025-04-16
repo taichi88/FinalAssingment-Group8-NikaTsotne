@@ -1,8 +1,4 @@
-﻿using BankingSystem.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-
+﻿
 namespace BankingSystem.Domain.IRepository
 {
     public interface IReportRepository : ITransaction

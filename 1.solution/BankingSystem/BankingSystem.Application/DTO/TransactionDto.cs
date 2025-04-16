@@ -1,6 +1,4 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.Text.Json.Serialization;
-using BankingSystem.Domain.CustomValidationAttributes;
 using BankingSystem.Domain.Enums;
 
 namespace BankingSystem.Application.DTO;

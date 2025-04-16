@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Threading.Tasks;
-using BankingSystem.Domain.Entities;
+﻿using System.Data;
 using BankingSystem.Domain.IRepository;
 using Dapper;
 

@@ -1,5 +1,4 @@
-﻿using System.Data;
-using BankingSystem.Domain.IRepository;
+﻿using BankingSystem.Domain.IRepository;
 
 namespace BankingSystem.Domain.IUnitOfWork
 {

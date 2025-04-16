@@ -1,5 +1,4 @@
-﻿using BankingSystem.Application.DTO;
-using BankingSystem.Application.DTO.Response;
+﻿using BankingSystem.Application.DTO.Response;
 
 namespace BankingSystem.Application.IServices;
 

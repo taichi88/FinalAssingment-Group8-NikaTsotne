@@ -1,6 +1,5 @@
 ﻿using BankingSystem.Application.DTO;
 using BankingSystem.Application.DTO.Response;
-using BankingSystem.Application.Identity;
 
 namespace BankingSystem.Application.IServices;
 

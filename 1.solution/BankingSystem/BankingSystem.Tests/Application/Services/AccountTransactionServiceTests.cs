@@ -8,6 +8,7 @@ using BankingSystem.Domain.IExternalApi;
 using BankingSystem.Domain.IRepository;
 using BankingSystem.Domain.IUnitOfWork;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Moq;
 
 namespace BankingSystem.Tests.Application.Services;
@@ -16,6 +17,7 @@ public class AccountTransactionServiceTests
 {
     private readonly Mock<IUnitOfWork> _mockUnitOfWork;
     private readonly Mock<IExchangeRateApi> _mockExchangeRateApi;
+    private readonly Mock<ILogger<AccountTransactionService>> _mockLogger;
     private readonly AccountTransactionService _service;
     private readonly Mock<IAccountRepository> _mockAccountRepository;
     private readonly Mock<IAccountTransactionRepository> _mockTransactionRepository;
@@ -36,6 +38,7 @@ public class AccountTransactionServiceTests
         _mockExchangeRateApi = new Mock<IExchangeRateApi>();
         _mockAccountRepository = new Mock<IAccountRepository>();
         _mockTransactionRepository = new Mock<IAccountTransactionRepository>();
+        _mockLogger = new Mock<ILogger<AccountTransactionService>>();
 
         var mockConfiguration = SetupMockConfiguration();
 
@@ -45,7 +48,8 @@ public class AccountTransactionServiceTests
         _service = new AccountTransactionService(
             _mockUnitOfWork.Object,
             _mockExchangeRateApi.Object,
-            new TransactionConstants(mockConfiguration.Object));
+            new TransactionConstants(mockConfiguration.Object),
+            _mockLogger.Object);
     }
 
     private Mock<IConfiguration> SetupMockConfiguration()

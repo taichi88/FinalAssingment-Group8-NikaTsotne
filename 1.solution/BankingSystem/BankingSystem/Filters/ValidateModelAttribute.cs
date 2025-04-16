@@ -1,5 +1,4 @@
 ﻿using BankingSystem.Application.DTO.Response;
-using BankingSystem.Application.Exceptions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Serilog;

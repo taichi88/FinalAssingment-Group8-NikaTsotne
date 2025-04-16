@@ -1,5 +1,4 @@
 ﻿using System.Data;
-using System.Threading;
 using BankingSystem.Domain.IRepository;
 using BankingSystem.Domain.IUnitOfWork;
 
