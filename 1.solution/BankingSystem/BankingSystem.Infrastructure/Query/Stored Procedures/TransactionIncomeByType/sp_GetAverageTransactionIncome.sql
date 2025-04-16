@@ -3,7 +3,7 @@ AS
 BEGIN
     SET NOCOUNT ON;
     
-    DECLARE @currencies TABLE (Currency VARCHAR(3), CurrencyId INT)
+    DECLARE @currencies TABLE (Currency NVARCHAR(3), CurrencyId INT)
     INSERT INTO @currencies VALUES ('GEL', 0), ('USD', 1), ('EUR', 2)
     
     SELECT c.Currency, ISNULL(t.AvgFeeAmount, 0) AS Amount
