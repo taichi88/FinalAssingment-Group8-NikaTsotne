@@ -6,6 +6,7 @@ using BankingSystem.Application.IServices;
 using BankingSystem.Domain.IExternalApi;
 using BankingSystem.Domain.IUnitOfWork;
 using BankingSystem.Domain.Enums;
+using Microsoft.Extensions.Logging;
 
 namespace BankingSystem.Application.Services;
 
@@ -14,21 +15,25 @@ public class AccountTransactionService : IAccountTransactionService
     private readonly IUnitOfWork _unitOfWork;
     private readonly IExchangeRateApi _exchangeRateApi;
     private readonly TransactionConstants _transactionConstants;
+    private readonly ILogger<AccountTransactionService> _logger;
 
     public AccountTransactionService(
         IUnitOfWork unitOfWork, 
         IExchangeRateApi exchangeRateApi,
-        TransactionConstants transactionConstants)
+        TransactionConstants transactionConstants,
+        ILogger<AccountTransactionService> logger)
     {
         _unitOfWork = unitOfWork;
         _exchangeRateApi = exchangeRateApi;
         _transactionConstants = transactionConstants;
+        _logger = logger;
     }
 
     public async Task<string> TransactionBetweenAccountsAsync(TransactionDto transactionDto, string userId)
     {
         try
         {
+            _logger.LogInformation($"Starting transaction between accounts. From: {transactionDto.FromAccountId}, To: {transactionDto.ToAccountId}");
             await _unitOfWork.BeginTransactionAsync();
 
             var fromAccount = await GetAccountSafelyAsync(transactionDto.FromAccountId, "Source");
@@ -51,6 +56,8 @@ public class AccountTransactionService : IAccountTransactionService
             switch (transaction.TransactionType)
             {
                 case TransactionType.TransferToOthers:
+                    _logger.LogInformation("Processing TransferToOthers transaction for user {UserId}", userId);
+
                     if (fromAccount.PersonId == toAccount.PersonId)
                         throw new ValidationException("Transfer to your own account is not allowed");
 
@@ -67,6 +74,8 @@ public class AccountTransactionService : IAccountTransactionService
                     break;
 
                 case TransactionType.ToMyAccount:
+                    _logger.LogInformation("Processing ToMyAccount transaction for user {UserId}", userId);
+
                     if (fromAccount.PersonId != toAccount.PersonId)
                         throw new ValidationException("Transfer to another user's account is not allowed");
 
@@ -88,6 +97,10 @@ public class AccountTransactionService : IAccountTransactionService
             await _unitOfWork.TransactionRepository.AddAccountTransactionAsync(transaction);
 
             await _unitOfWork.CommitAsync();
+            _logger.LogInformation("Transaction completed successfully. From: {FromAccountId}, To: {ToAccountId}, Amount: {Amount}",
+                transaction.FromAccountId, transaction.ToAccountId, transaction.Amount);
+            
+            
             return "The transaction was completed successfully.";
         }
         catch (Exception)
@@ -101,6 +114,8 @@ public class AccountTransactionService : IAccountTransactionService
     {
         try
         {
+            _logger.LogInformation("Retrieving {AccountType} account with ID: {AccountId}", accountType, accountId);
+
             return await _unitOfWork.AccountRepository.GetAccountByIdAsync(accountId);
         }
         catch (InvalidOperationException)
