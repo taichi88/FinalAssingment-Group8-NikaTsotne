@@ -1,5 +1,4 @@
-﻿// BankingSystem.Application/Services/CardService.cs
-using BankingSystem.Application.DTO;
+﻿using BankingSystem.Application.DTO;
 using BankingSystem.Application.Helpers;
 using BankingSystem.Application.IServices;
 using BankingSystem.Domain.Entities;

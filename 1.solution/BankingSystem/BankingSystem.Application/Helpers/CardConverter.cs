@@ -14,7 +14,7 @@ namespace BankingSystem.Application.Helpers
                 CardNumber = CardSecurityHelper.Decrypt(encryptedCard.CardNumber),
                 ExpirationDate = encryptedCard.ExpirationDate,
                 Cvv = CardSecurityHelper.Decrypt(encryptedCard.Cvv),
-                PinCode = encryptedCard.PinCode, // PIN code remains hashed
+                PinCode = encryptedCard.PinCode,
                 AccountId = encryptedCard.AccountId
             };
         }
@@ -29,7 +29,7 @@ namespace BankingSystem.Application.Helpers
                 CardNumber = CardSecurityHelper.Encrypt(decryptedCard.CardNumber),
                 ExpirationDate = decryptedCard.ExpirationDate,
                 Cvv = CardSecurityHelper.Encrypt(decryptedCard.Cvv),
-                PinCode = decryptedCard.PinCode, // PIN code remains hashed
+                PinCode = decryptedCard.PinCode,
                 AccountId = decryptedCard.AccountId
             };
         }

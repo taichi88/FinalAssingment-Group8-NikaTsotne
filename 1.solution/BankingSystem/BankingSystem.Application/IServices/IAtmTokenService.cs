@@ -1,5 +1,4 @@
-﻿// BankingSystem.Application/IServices/IAtmTokenService.cs
-using BankingSystem.Application.DTO;
+﻿using BankingSystem.Application.DTO;
 using BankingSystem.Application.DTO.Response;
 
 namespace BankingSystem.Application.IServices;

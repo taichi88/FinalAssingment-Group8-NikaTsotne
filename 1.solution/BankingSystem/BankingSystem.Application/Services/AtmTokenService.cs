@@ -1,5 +1,4 @@
-﻿// BankingSystem.Application/Services/AtmTokenService.cs
-using System.IdentityModel.Tokens.Jwt;
+﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using BankingSystem.Application.DTO.Response;
