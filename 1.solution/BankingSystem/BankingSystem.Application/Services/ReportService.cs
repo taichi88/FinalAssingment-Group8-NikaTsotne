@@ -88,8 +88,6 @@ namespace BankingSystem.Application.Services
                 
                 var transactionsByDay = await _unitOfWork.ReportRepository.GetTransactionsByDayLastMonthAsync();
                 
-                await _unitOfWork.CommitAsync();
-                
                 var response = new MonthlyTransactionBreakdownResponse
                 {
                     TransactionsByDay = transactionsByDay.Select(t => new DailyTransactionCount
