@@ -33,19 +33,19 @@ public class AccountTransactionService : IAccountTransactionService
     {
         try
         {
-            _logger.LogInformation($"Starting transaction between accounts. From: {transactionDto.FromAccountId}, To: {transactionDto.ToAccountId}");
+            _logger.LogInformation($"Starting transaction between accounts. From: {transactionDto.FromAccountIban}, To: {transactionDto.ToAccountIban}");
             await _unitOfWork.BeginTransactionAsync();
 
-            var fromAccount = await GetAccountSafelyAsync(transactionDto.FromAccountId, "Source");
-            var toAccount = await GetAccountSafelyAsync(transactionDto.ToAccountId, "Destination");
+            var fromAccount = await GetAccountSafelyAsync(transactionDto.FromAccountIban, "Source");
+            var toAccount = await GetAccountSafelyAsync(transactionDto.ToAccountIban, "Destination");
 
             if (fromAccount.PersonId != userId)
                 throw new UnauthorizedException("You are not authorized to access this account.");
 
             var transaction = new Transaction
             {
-                FromAccountId = transactionDto.FromAccountId,
-                ToAccountId = transactionDto.ToAccountId,
+                FromAccountId = fromAccount.AccountId,
+                ToAccountId = toAccount.AccountId,
                 Currency = fromAccount.Currency,
                 Amount = transactionDto.Amount,
                 TransactionDate = DateTime.Now,
@@ -110,17 +110,17 @@ public class AccountTransactionService : IAccountTransactionService
         }
     }
 
-    private async Task<Account> GetAccountSafelyAsync(int accountId, string accountType)
+    private async Task<Account> GetAccountSafelyAsync(string iban, string accountType)
     {
         try
         {
-            _logger.LogInformation("Retrieving {AccountType} account with ID: {AccountId}", accountType, accountId);
+            _logger.LogInformation("Retrieving {AccountType} account with ID: {AccountId}", accountType, iban);
 
-            return await _unitOfWork.AccountRepository.GetAccountByIdAsync(accountId);
+            return await _unitOfWork.AccountRepository.GetAccountByIbanAsync(iban);
         }
         catch (InvalidOperationException)
         {
-            throw new NotFoundException($"{accountType} account {accountId} not found");
+            throw new NotFoundException($"{accountType} account {iban} not found");
         }
     }
 
